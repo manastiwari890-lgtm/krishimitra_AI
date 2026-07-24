@@ -12,11 +12,7 @@ import { analyzeSoilData } from "../services/soilService";
 // =====================================================
 
 function getNutrientStatus(nutrient, value, unit) {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
+  if (value === null || value === undefined || value === "") {
     return "unknown";
   }
 
@@ -64,49 +60,34 @@ function getStatusDisplay(status, language) {
   if (status === "low") {
     return {
       icon: "🔴",
-      label:
-        language === "hi"
-          ? "कम"
-          : "Low",
+      label: language === "hi" ? "कम" : "Low",
     };
   }
 
   if (status === "medium") {
     return {
       icon: "🟢",
-      label:
-        language === "hi"
-          ? "मध्यम"
-          : "Medium",
+      label: language === "hi" ? "मध्यम" : "Medium",
     };
   }
 
   if (status === "high") {
     return {
       icon: "🟠",
-      label:
-        language === "hi"
-          ? "अधिक"
-          : "High",
+      label: language === "hi" ? "अधिक" : "High",
     };
   }
 
   if (status === "unclassified") {
     return {
       icon: "⚪",
-      label:
-        language === "hi"
-          ? "वर्गीकृत नहीं"
-          : "Unclassified",
+      label: language === "hi" ? "वर्गीकृत नहीं" : "Unclassified",
     };
   }
 
   return {
     icon: "⚪",
-    label:
-      language === "hi"
-        ? "अज्ञात"
-        : "Unknown",
+    label: language === "hi" ? "अज्ञात" : "Unknown",
   };
 }
 
@@ -114,11 +95,7 @@ function getStatusDisplay(status, language) {
 // COMPONENT
 // =====================================================
 
-function AdvancedSoilTest({
-  language = "hi",
-  onClose,
-  onReportGenerated,
-}) {
+function AdvancedSoilTest({ language = "hi", onClose, onReportGenerated }) {
   // =====================================================
   // STATES
   // =====================================================
@@ -176,7 +153,7 @@ function AdvancedSoilTest({
       alert(
         language === "hi"
           ? "कृपया Nitrogen, Phosphorus, Potassium और pH की सभी values भरें।"
-          : "Please enter Nitrogen, Phosphorus, Potassium and pH values."
+          : "Please enter Nitrogen, Phosphorus, Potassium and pH values.",
       );
 
       return false;
@@ -196,7 +173,7 @@ function AdvancedSoilTest({
       alert(
         language === "hi"
           ? "कृपया सही numeric values भरें।"
-          : "Please enter valid numeric values."
+          : "Please enter valid numeric values.",
       );
 
       return false;
@@ -206,7 +183,7 @@ function AdvancedSoilTest({
       alert(
         language === "hi"
           ? "N, P और K की values negative नहीं हो सकतीं।"
-          : "N, P and K values cannot be negative."
+          : "N, P and K values cannot be negative.",
       );
 
       return false;
@@ -216,26 +193,20 @@ function AdvancedSoilTest({
       alert(
         language === "hi"
           ? "pH की value 0 से 14 के बीच होनी चाहिए।"
-          : "pH must be between 0 and 14."
+          : "pH must be between 0 and 14.",
       );
 
       return false;
     }
 
     if (values.moisture !== "") {
-      const moisture = Number(
-        values.moisture
-      );
+      const moisture = Number(values.moisture);
 
-      if (
-        Number.isNaN(moisture) ||
-        moisture < 0 ||
-        moisture > 100
-      ) {
+      if (Number.isNaN(moisture) || moisture < 0 || moisture > 100) {
         alert(
           language === "hi"
             ? "Moisture की value 0 से 100% के बीच होनी चाहिए।"
-            : "Moisture must be between 0 and 100%."
+            : "Moisture must be between 0 and 100%.",
         );
 
         return false;
@@ -259,333 +230,97 @@ function AdvancedSoilTest({
     const k = Number(values.potassium);
     const ph = Number(values.ph);
 
-    const moisture =
-      values.moisture !== ""
-        ? Number(values.moisture)
-        : null;
-        // ===================================================
-// KRISHIMITRA SOIL INTELLIGENCE V2 - BACKEND
-// ===================================================
-
-let backendResult = null;
-
-try {
-  backendResult = await analyzeSoilData({
-    nitrogen: n,
-    phosphorus: p,
-    potassium: k,
-
-    npkUnit:
-      values.npkUnit || "kg/ha",
-
-    ph,
-
-    moisture,
-
-    // Temporary value.
-    // Later this will come automatically
-    // from KrishiMitra live weather.
-    temperature: 25,
-  });
-
-  console.log(
-    "KrishiMitra Soil V2 Result:",
-    backendResult
-  );
-} catch (error) {
-  console.error(
-    "KrishiMitra Soil API Error:",
-    error
-  );
-
-  alert(
-    language === "hi"
-      ? `Soil Intelligence से connection नहीं हो पाया: ${error.message}`
-      : `Could not connect to Soil Intelligence: ${error.message}`
-  );
-
-  return;
-}
-
+    const moisture = values.moisture !== "" ? Number(values.moisture) : null;
     // ===================================================
-    // NPK STATUS
+    // KRISHIMITRA SOIL INTELLIGENCE V2 - BACKEND
     // ===================================================
 
-    const nitrogenStatus =
-      getNutrientStatus(
-        "nitrogen",
-        n,
-        values.npkUnit
+    let backendResult = null;
+
+    try {
+      backendResult = await analyzeSoilData({
+        nitrogen: n,
+        phosphorus: p,
+        potassium: k,
+
+        npkUnit: values.npkUnit || "kg/ha",
+
+        ph,
+
+        moisture,
+
+        // Temporary value.
+        // Later this will come automatically
+        // from KrishiMitra live weather.
+        temperature: 25,
+      });
+
+      console.log("KrishiMitra Soil V2 Result:", backendResult);
+    } catch (error) {
+      console.error("KrishiMitra Soil API Error:", error);
+
+      alert(
+        language === "hi"
+          ? `Soil Intelligence से connection नहीं हो पाया: ${error.message}`
+          : `Could not connect to Soil Intelligence: ${error.message}`,
       );
 
-    const phosphorusStatus =
-      getNutrientStatus(
-        "phosphorus",
-        p,
-        values.npkUnit
-      );
+      return;
+    }
+    // =====================================================
+    // BUILD REPORT FROM SOIL INTELLIGENCE V2 BACKEND
+    // =====================================================
 
-    const potassiumStatus =
-      getNutrientStatus(
-        "potassium",
-        k,
-        values.npkUnit
-      );
+    const backendSoilValues = backendResult.soilValues || {};
 
-    const observations = [];
-    const recommendations = [];
+    const backendNutrients = backendResult.nutrientAnalysis || {};
 
-    let phStatus = "";
+    const backendPh = backendResult.phAnalysis || {};
+
+    const backendHealth = backendResult.soilHealth || {};
+
+    const nitrogenStatus = backendNutrients.nitrogen?.status || "unknown";
+
+    const phosphorusStatus = backendNutrients.phosphorus?.status || "unknown";
+
+    const potassiumStatus = backendNutrients.potassium?.status || "unknown";
+
+    // =====================================================
+    // REPORT STATUS
+    // =====================================================
+
+    const phStatus =
+      backendPh.label ||
+      (language === "hi" ? "मिट्टी विश्लेषण" : "Soil Analysis");
+
     let statusIcon = "🟢";
 
-    // =====================================================
-    // PH ANALYSIS
-    // =====================================================
-
-    if (ph < 5.5) {
-      phStatus =
-        language === "hi"
-          ? "काफी अम्लीय मिट्टी"
-          : "Strongly Acidic Soil";
-
+    if (backendPh.severity === "high") {
       statusIcon = "🔴";
-
-      observations.push(
-        language === "hi"
-          ? `आपकी रिपोर्ट में मिट्टी का pH ${ph} है, जो काफी acidic है।`
-          : `Your report shows a soil pH of ${ph}, which is strongly acidic.`
-      );
-
-      recommendations.push(
-        language === "hi"
-          ? "फसल के अनुसार मिट्टी सुधार की सलाह के लिए Soil Test recommendation या स्थानीय कृषि विशेषज्ञ की सलाह देखें।"
-          : "Check the soil-test recommendation or consult a local agricultural expert for crop-specific soil amendment advice."
-      );
-    } else if (ph < 6.5) {
-      phStatus =
-        language === "hi"
-          ? "हल्की अम्लीय मिट्टी"
-          : "Slightly Acidic Soil";
-
+    } else if (backendPh.severity === "moderate") {
       statusIcon = "🟡";
-
-      observations.push(
-        language === "hi"
-          ? `मिट्टी का pH ${ph} है और मिट्टी हल्की acidic है।`
-          : `The soil pH is ${ph}, indicating slightly acidic soil.`
-      );
-
-      recommendations.push(
-        language === "hi"
-          ? "फसल की जरूरत के अनुसार Soil Health Card की recommendation देखें।"
-          : "Check your Soil Health Card recommendation according to the crop being grown."
-      );
-    } else if (ph <= 7.5) {
-      phStatus =
-        language === "hi"
-          ? "लगभग Neutral pH"
-          : "Near Neutral pH";
-
-      statusIcon = "🟢";
-
-      observations.push(
-        language === "hi"
-          ? `मिट्टी का pH ${ph} है और यह लगभग neutral range में है।`
-          : `The soil pH is ${ph}, which is around the neutral range.`
-      );
-
-      recommendations.push(
-        language === "hi"
-          ? "मिट्टी की स्थिति को बनाए रखने के लिए नियमित Soil Test और फसल की निगरानी करते रहें।"
-          : "Continue periodic soil testing and crop monitoring."
-      );
-    } else if (ph <= 8.5) {
-      phStatus =
-        language === "hi"
-          ? "Alkaline मिट्टी"
-          : "Alkaline Soil";
-
-      statusIcon = "🟠";
-
-      observations.push(
-        language === "hi"
-          ? `मिट्टी का pH ${ph} है और मिट्टी alkaline तरफ है।`
-          : `The soil pH is ${ph}, indicating alkaline soil.`
-      );
-
-      recommendations.push(
-        language === "hi"
-          ? "फसल के अनुसार alkaline soil management के लिए Soil Test recommendation देखें।"
-          : "Use the soil-test recommendation for crop-specific alkaline soil management."
-      );
-    } else {
-      phStatus =
-        language === "hi"
-          ? "काफी Alkaline मिट्टी"
-          : "Strongly Alkaline Soil";
-
-      statusIcon = "🔴";
-
-      observations.push(
-        language === "hi"
-          ? `मिट्टी का pH ${ph} है और यह काफी alkaline है।`
-          : `The soil pH is ${ph}, which is strongly alkaline.`
-      );
-
-      recommendations.push(
-        language === "hi"
-          ? "ऐसी स्थिति में फसल और स्थानीय मिट्टी के अनुसार विशेषज्ञ सलाह लेना बेहतर होगा।"
-          : "Crop-specific and locally appropriate soil-management advice is recommended."
-      );
     }
 
     // =====================================================
-    // NPK OBSERVATIONS
-    // =====================================================
-
-    const nDisplay =
-      getStatusDisplay(
-        nitrogenStatus,
-        language
-      );
-
-    const pDisplay =
-      getStatusDisplay(
-        phosphorusStatus,
-        language
-      );
-
-    const kDisplay =
-      getStatusDisplay(
-        potassiumStatus,
-        language
-      );
-
-    observations.push(
-      language === "hi"
-        ? `Nitrogen (N): ${n} ${
-            values.npkUnit || ""
-          } — ${nDisplay.label}`
-        : `Nitrogen (N): ${n} ${
-            values.npkUnit || ""
-          } — ${nDisplay.label}`
-    );
-
-    observations.push(
-      language === "hi"
-        ? `Phosphorus (P): ${p} ${
-            values.npkUnit || ""
-          } — ${pDisplay.label}`
-        : `Phosphorus (P): ${p} ${
-            values.npkUnit || ""
-          } — ${pDisplay.label}`
-    );
-
-    observations.push(
-      language === "hi"
-        ? `Potassium (K): ${k} ${
-            values.npkUnit || ""
-          } — ${kDisplay.label}`
-        : `Potassium (K): ${k} ${
-            values.npkUnit || ""
-          } — ${kDisplay.label}`
-    );
-
-    // =====================================================
-    // MOISTURE
-    // =====================================================
-
-    if (moisture !== null) {
-      observations.push(
-        language === "hi"
-          ? `दर्ज की गई Soil Moisture: ${moisture}%`
-          : `Entered Soil Moisture: ${moisture}%`
-      );
-    }
-
-    // =====================================================
-    // NPK INTELLIGENCE
-    // =====================================================
-
-    if (values.npkUnit === "kg/ha") {
-      if (nitrogenStatus === "low") {
-        recommendations.push(
-          language === "hi"
-            ? "मिट्टी में उपलब्ध Nitrogen कम श्रेणी में है। फसल और Soil Health Card की recommendation के अनुसार nitrogen management करें।"
-            : "Available soil Nitrogen falls in the low category. Follow crop-specific Soil Health Card guidance for nitrogen management."
-        );
-      }
-
-      if (phosphorusStatus === "low") {
-        recommendations.push(
-          language === "hi"
-            ? "मिट्टी में उपलब्ध Phosphorus कम श्रेणी में है। फसल-विशिष्ट phosphorus recommendation देखें।"
-            : "Available soil Phosphorus falls in the low category. Check the crop-specific phosphorus recommendation."
-        );
-      }
-
-      if (potassiumStatus === "low") {
-        recommendations.push(
-          language === "hi"
-            ? "मिट्टी में उपलब्ध Potassium कम श्रेणी में है। Soil Health Card की crop-specific recommendation देखें।"
-            : "Available soil Potassium falls in the low category. Follow the crop-specific Soil Health Card recommendation."
-        );
-      }
-
-      if (
-        nitrogenStatus === "medium" &&
-        phosphorusStatus === "medium" &&
-        potassiumStatus === "medium"
-      ) {
-        recommendations.push(
-          language === "hi"
-            ? "N, P और K तीनों सामान्य Medium soil-test category में हैं। फिर भी fertilizer मात्रा फसल और target yield के अनुसार तय करें।"
-            : "N, P and K are all within the general Medium soil-test category. Fertilizer quantity should still be based on crop and target yield."
-        );
-      }
-
-      if (
-        nitrogenStatus === "high" ||
-        phosphorusStatus === "high" ||
-        potassiumStatus === "high"
-      ) {
-        recommendations.push(
-          language === "hi"
-            ? "एक या अधिक nutrients High category में हैं। अतिरिक्त fertilizer देने से पहले Soil Health Card की recommendation देखें।"
-            : "One or more nutrients are in the High category. Check the Soil Health Card recommendation before applying additional fertilizer."
-        );
-      }
-    } else {
-      recommendations.push(
-        language === "hi"
-          ? "इस NPK unit के लिए KrishiMitra general kg/ha thresholds लागू नहीं करेगा। सही classification के लिए report की testing method और reference range आवश्यक है।"
-          : "KrishiMitra will not apply general kg/ha thresholds to this NPK unit. The report's testing method and reference range are required for reliable classification."
-      );
-    }
-
-    recommendations.push(
-      language === "hi"
-        ? "KrishiMitra केवल nutrient status classify कर रहा है; fertilizer की मात्रा बिना crop-specific recommendation के अनुमान से नहीं बताई जाएगी।"
-        : "KrishiMitra is classifying nutrient status only; fertilizer quantities will not be guessed without crop-specific recommendations."
-    );
-
-    // =====================================================
-    // CREATE REPORT
+    // AUTHORITATIVE BACKEND REPORT
     // =====================================================
 
     const generatedReport = {
       status: phStatus,
+
       icon: statusIcon,
 
-      observations,
-      recommendations,
+      observations: backendResult.observations || [],
 
-      nitrogen: n,
-      phosphorus: p,
-      potassium: k,
+      recommendations: backendResult.recommendations || [],
 
-      npkUnit:
-        values.npkUnit || null,
+      nitrogen: backendSoilValues.nitrogen ?? n,
+
+      phosphorus: backendSoilValues.phosphorus ?? p,
+
+      potassium: backendSoilValues.potassium ?? k,
+
+      npkUnit: backendSoilValues.npkUnit || values.npkUnit || "kg/ha",
 
       nutrientStatus: {
         nitrogen: nitrogenStatus,
@@ -593,19 +328,36 @@ try {
         potassium: potassiumStatus,
       },
 
-      ph,
-      moisture,
+      ph: backendSoilValues.ph ?? ph,
 
-      generatedAt:
-        new Date().toISOString(),
+      moisture: backendSoilValues.moisture ?? moisture,
+
+      temperature: backendSoilValues.temperature ?? null,
+
+      // Soil Intelligence V2 data
+      soilHealth: backendHealth,
+
+      phAnalysis: backendPh,
+
+      moistureAnalysis: backendResult.moistureAnalysis || null,
+
+      recommendedCrops: backendResult.recommendedCrops || [],
+
+      allCropScores: backendResult.allCropScores || [],
+
+      // Keep this for Module 8:
+      // 3D Soil Visualization
+      visualization: backendResult.visualization || null,
+
+      engine: backendResult.engine || null,
+
+      generatedAt: new Date().toISOString(),
     };
 
     setReport(generatedReport);
 
     if (onReportGenerated) {
-      onReportGenerated(
-        generatedReport
-      );
+      onReportGenerated(generatedReport);
     }
   };
 
@@ -633,13 +385,11 @@ try {
   const speakReport = () => {
     if (!report) return;
 
-    if (
-      !("speechSynthesis" in window)
-    ) {
+    if (!("speechSynthesis" in window)) {
       alert(
         language === "hi"
           ? "आपका Browser Voice सुविधा support नहीं करता।"
-          : "Your browser does not support voice output."
+          : "Your browser does not support voice output.",
       );
 
       return;
@@ -653,21 +403,13 @@ try {
       ...report.recommendations,
     ].join(" ");
 
-    const speech =
-      new SpeechSynthesisUtterance(
-        speechText
-      );
+    const speech = new SpeechSynthesisUtterance(speechText);
 
-    speech.lang =
-      language === "hi"
-        ? "hi-IN"
-        : "en-IN";
+    speech.lang = language === "hi" ? "hi-IN" : "en-IN";
 
     speech.rate = 0.9;
 
-    window.speechSynthesis.speak(
-      speech
-    );
+    window.speechSynthesis.speak(speech);
   };
 
   // =====================================================
@@ -676,18 +418,13 @@ try {
 
   return (
     <section className="advanced-soil-panel">
-
       {/* HEADER */}
 
       <div className="advanced-header">
         <div>
-          <span className="assistant-label">
-            🔬 ADVANCED SOIL ANALYSIS
-          </span>
+          <span className="assistant-label">🔬 ADVANCED SOIL ANALYSIS</span>
 
-          <h2>
-            Soil Health Card Analysis
-          </h2>
+          <h2>Soil Health Card Analysis</h2>
         </div>
 
         <button
@@ -710,9 +447,7 @@ try {
 
       <SoilCardScanner
         language={language}
-        onValuesDetected={
-          handleDetectedValues
-        }
+        onValuesDetected={handleDetectedValues}
       />
 
       {/* DIVIDER */}
@@ -730,23 +465,19 @@ try {
           style={{
             height: "1px",
             flex: 1,
-            background:
-              "rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.1)",
           }}
         />
 
         <span>
-          {language === "hi"
-            ? "या manually भरें"
-            : "OR ENTER MANUALLY"}
+          {language === "hi" ? "या manually भरें" : "OR ENTER MANUALLY"}
         </span>
 
         <div
           style={{
             height: "1px",
             flex: 1,
-            background:
-              "rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.1)",
           }}
         />
       </div>
@@ -754,14 +485,10 @@ try {
       {/* MANUAL VALUES */}
 
       <div className="manual-soil-heading">
-        <span className="assistant-label">
-          ✍️ MANUAL SOIL VALUES
-        </span>
+        <span className="assistant-label">✍️ MANUAL SOIL VALUES</span>
 
         <h3>
-          {language === "hi"
-            ? "Report की Values भरें"
-            : "Enter Report Values"}
+          {language === "hi" ? "Report की Values भरें" : "Enter Report Values"}
         </h3>
 
         <p className="advanced-description">
@@ -774,76 +501,42 @@ try {
       {/* INPUT GRID */}
 
       <div className="advanced-input-grid">
-
         <label>
-          <span>
-            🌿 Nitrogen (N)
-          </span>
+          <span>🌿 Nitrogen (N)</span>
 
           <input
             type="number"
             min="0"
             inputMode="decimal"
             value={values.nitrogen}
-            placeholder={
-              language === "hi"
-                ? "N की value"
-                : "Enter N"
-            }
-            onChange={(event) =>
-              updateValue(
-                "nitrogen",
-                event.target.value
-              )
-            }
+            placeholder={language === "hi" ? "N की value" : "Enter N"}
+            onChange={(event) => updateValue("nitrogen", event.target.value)}
           />
         </label>
 
         <label>
-          <span>
-            🌱 Phosphorus (P)
-          </span>
+          <span>🌱 Phosphorus (P)</span>
 
           <input
             type="number"
             min="0"
             inputMode="decimal"
             value={values.phosphorus}
-            placeholder={
-              language === "hi"
-                ? "P की value"
-                : "Enter P"
-            }
-            onChange={(event) =>
-              updateValue(
-                "phosphorus",
-                event.target.value
-              )
-            }
+            placeholder={language === "hi" ? "P की value" : "Enter P"}
+            onChange={(event) => updateValue("phosphorus", event.target.value)}
           />
         </label>
 
         <label>
-          <span>
-            🥔 Potassium (K)
-          </span>
+          <span>🥔 Potassium (K)</span>
 
           <input
             type="number"
             min="0"
             inputMode="decimal"
             value={values.potassium}
-            placeholder={
-              language === "hi"
-                ? "K की value"
-                : "Enter K"
-            }
-            onChange={(event) =>
-              updateValue(
-                "potassium",
-                event.target.value
-              )
-            }
+            placeholder={language === "hi" ? "K की value" : "Enter K"}
+            onChange={(event) => updateValue("potassium", event.target.value)}
           />
         </label>
 
@@ -854,12 +547,7 @@ try {
 
           <select
             value={values.npkUnit}
-            onChange={(event) =>
-              updateValue(
-                "npkUnit",
-                event.target.value
-              )
-            }
+            onChange={(event) => updateValue("npkUnit", event.target.value)}
           >
             <option value="">
               {language === "hi"
@@ -867,25 +555,15 @@ try {
                 : "Select report unit"}
             </option>
 
-            <option value="kg/ha">
-              kg/ha
-            </option>
+            <option value="kg/ha">kg/ha</option>
 
-            <option value="mg/kg">
-              mg/kg
-            </option>
+            <option value="mg/kg">mg/kg</option>
 
-            <option value="ppm">
-              ppm
-            </option>
+            <option value="ppm">ppm</option>
 
-            <option value="%">
-              %
-            </option>
+            <option value="%">%</option>
 
-            <option value="other">
-              Other / अन्य
-            </option>
+            <option value="other">Other / अन्य</option>
           </select>
         </label>
 
@@ -900,19 +578,12 @@ try {
             inputMode="decimal"
             value={values.ph}
             placeholder="0 - 14"
-            onChange={(event) =>
-              updateValue(
-                "ph",
-                event.target.value
-              )
-            }
+            onChange={(event) => updateValue("ph", event.target.value)}
           />
         </label>
 
         <label>
-          <span>
-            💧 Soil Moisture (Optional)
-          </span>
+          <span>💧 Soil Moisture (Optional)</span>
 
           <input
             type="number"
@@ -922,15 +593,9 @@ try {
             inputMode="decimal"
             value={values.moisture}
             placeholder="%"
-            onChange={(event) =>
-              updateValue(
-                "moisture",
-                event.target.value
-              )
-            }
+            onChange={(event) => updateValue("moisture", event.target.value)}
           />
         </label>
-
       </div>
 
       {/* WARNING */}
@@ -948,9 +613,7 @@ try {
         <button
           type="button"
           className="advanced-analyze-button"
-          onClick={
-            analyzeAdvancedSoil
-          }
+          onClick={analyzeAdvancedSoil}
         >
           🔬{" "}
           {language === "hi"
@@ -963,15 +626,10 @@ try {
 
       {report && (
         <div className="advanced-result">
-
           <div className="advanced-result-status">
-            <div className="health-icon">
-              {report.icon}
-            </div>
+            <div className="health-icon">{report.icon}</div>
 
-            <span className="assistant-label">
-              KRISHIMITRA ADVANCED REPORT
-            </span>
+            <span className="assistant-label">KRISHIMITRA ADVANCED REPORT</span>
 
             <h2>{report.status}</h2>
           </div>
@@ -979,133 +637,88 @@ try {
           {/* VALUES */}
 
           <div className="advanced-report-values">
-
             <div>
-              <span>
-                🌿 Nitrogen
-              </span>
+              <span>🌿 Nitrogen</span>
 
               <strong>
                 {report.nitrogen}
-                {report.npkUnit
-                  ? ` ${report.npkUnit}`
-                  : ""}
+                {report.npkUnit ? ` ${report.npkUnit}` : ""}
               </strong>
 
               <small>
                 {
-                  getStatusDisplay(
-                    report.nutrientStatus
-                      .nitrogen,
-                    language
-                  ).icon
+                  getStatusDisplay(report.nutrientStatus.nitrogen, language)
+                    .icon
                 }{" "}
                 {
-                  getStatusDisplay(
-                    report.nutrientStatus
-                      .nitrogen,
-                    language
-                  ).label
+                  getStatusDisplay(report.nutrientStatus.nitrogen, language)
+                    .label
                 }
               </small>
             </div>
 
             <div>
-              <span>
-                🌱 Phosphorus
-              </span>
+              <span>🌱 Phosphorus</span>
 
               <strong>
                 {report.phosphorus}
-                {report.npkUnit
-                  ? ` ${report.npkUnit}`
-                  : ""}
+                {report.npkUnit ? ` ${report.npkUnit}` : ""}
               </strong>
 
               <small>
                 {
-                  getStatusDisplay(
-                    report.nutrientStatus
-                      .phosphorus,
-                    language
-                  ).icon
+                  getStatusDisplay(report.nutrientStatus.phosphorus, language)
+                    .icon
                 }{" "}
                 {
-                  getStatusDisplay(
-                    report.nutrientStatus
-                      .phosphorus,
-                    language
-                  ).label
+                  getStatusDisplay(report.nutrientStatus.phosphorus, language)
+                    .label
                 }
               </small>
             </div>
 
             <div>
-              <span>
-                🥔 Potassium
-              </span>
+              <span>🥔 Potassium</span>
 
               <strong>
                 {report.potassium}
-                {report.npkUnit
-                  ? ` ${report.npkUnit}`
-                  : ""}
+                {report.npkUnit ? ` ${report.npkUnit}` : ""}
               </strong>
 
               <small>
                 {
-                  getStatusDisplay(
-                    report.nutrientStatus
-                      .potassium,
-                    language
-                  ).icon
+                  getStatusDisplay(report.nutrientStatus.potassium, language)
+                    .icon
                 }{" "}
                 {
-                  getStatusDisplay(
-                    report.nutrientStatus
-                      .potassium,
-                    language
-                  ).label
+                  getStatusDisplay(report.nutrientStatus.potassium, language)
+                    .label
                 }
               </small>
             </div>
 
             <div>
               <span>🧪 pH</span>
-              <strong>
-                {report.ph}
-              </strong>
+              <strong>{report.ph}</strong>
             </div>
 
-            {report.moisture !==
-              null && (
+            {report.moisture !== null && (
               <div>
-                <span>
-                  💧 Moisture
-                </span>
+                <span>💧 Moisture</span>
 
-                <strong>
-                  {report.moisture}%
-                </strong>
+                <strong>{report.moisture}%</strong>
               </div>
             )}
-
           </div>
 
           {/* OBSERVATIONS */}
 
           <div className="advanced-observations">
-            <h3>
-              🔎 KrishiMitra Observation
-            </h3>
+            <h3>🔎 KrishiMitra Observation</h3>
 
-            {report.observations.map(
-              (observation, index) => (
-                <p key={index}>
-                  ✓ {observation}
-                </p>
-              )
-            )}
+            {report.observations.map((observation, index) => (
+              <p key={index}>✓ {observation}</p>
+            ))}
           </div>
 
           {/* RECOMMENDATIONS */}
@@ -1113,21 +726,12 @@ try {
           <div className="advanced-recommendations">
             <h3>
               💡{" "}
-              {language === "hi"
-                ? "KrishiMitra की सलाह"
-                : "KrishiMitra Advice"}
+              {language === "hi" ? "KrishiMitra की सलाह" : "KrishiMitra Advice"}
             </h3>
 
-            {report.recommendations.map(
-              (
-                recommendation,
-                index
-              ) => (
-                <p key={index}>
-                  ✓ {recommendation}
-                </p>
-              )
-            )}
+            {report.recommendations.map((recommendation, index) => (
+              <p key={index}>✓ {recommendation}</p>
+            ))}
           </div>
 
           <div className="advanced-result-note">
@@ -1140,36 +744,25 @@ try {
           {/* ACTIONS */}
 
           <div className="result-actions">
-
             <button
               type="button"
               className="voice-button"
               onClick={speakReport}
             >
-              🔊{" "}
-              {language === "hi"
-                ? "Report सुनें"
-                : "Listen to Report"}
+              🔊 {language === "hi" ? "Report सुनें" : "Listen to Report"}
             </button>
 
             <button
               type="button"
               className="restart-button"
-              onClick={
-                resetAdvancedTest
-              }
+              onClick={resetAdvancedTest}
             >
               ↻{" "}
-              {language === "hi"
-                ? "नई Report जाँचें"
-                : "Check Another Report"}
+              {language === "hi" ? "नई Report जाँचें" : "Check Another Report"}
             </button>
-
           </div>
-
         </div>
       )}
-
     </section>
   );
 }
