@@ -1,0 +1,1788 @@
+/* =====================================================
+   KRISHIMITRA AI - WEATHER INTELLIGENCE
+===================================================== */
+
+.weather-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 30px;
+  color: #f2fff7;
+}
+
+.weather-page * {
+  box-sizing: border-box;
+}
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.weather-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+
+  padding: 30px;
+  margin-bottom: 24px;
+
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(31, 116, 75, 0.25),
+      rgba(5, 25, 16, 0.85)
+    );
+
+  border: 1px solid rgba(75, 229, 138, 0.16);
+}
+
+.weather-hero h1 {
+  margin: 8px 0;
+  font-size: clamp(28px, 4vw, 44px);
+}
+
+.weather-hero p {
+  margin: 0;
+  color: #a5b9ad;
+  line-height: 1.6;
+}
+
+.weather-label {
+  display: inline-block;
+
+  color: #56e995;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.weather-refresh-button,
+.weather-primary-button,
+.voice-weather-button {
+  border: none;
+
+  padding: 12px 18px;
+
+  border-radius: 12px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.weather-refresh-button:hover,
+.weather-primary-button:hover,
+.voice-weather-button:hover {
+  transform: translateY(-2px);
+}
+
+.weather-refresh-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.weather-refresh-button {
+  background: #173c29;
+  color: #eafff2;
+
+  border: 1px solid rgba(75, 229, 138, 0.2);
+}
+
+.weather-primary-button {
+  background: #4be58a;
+  color: #04150c;
+}
+
+.voice-weather-button {
+  background: rgba(75, 229, 138, 0.12);
+  color: #67eea0;
+
+  border: 1px solid rgba(75, 229, 138, 0.2);
+}
+
+/* =====================================================
+   CURRENT WEATHER
+===================================================== */
+
+.current-weather-card {
+  padding: 30px;
+
+  border-radius: 24px;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(75, 229, 138, 0.13),
+      transparent 35%
+    ),
+    rgba(8, 30, 20, 0.92);
+
+  border: 1px solid rgba(75, 229, 138, 0.15);
+
+  margin-bottom: 26px;
+}
+
+.current-weather-main {
+  display: flex;
+  align-items: center;
+
+  gap: 24px;
+}
+
+.current-weather-icon {
+  font-size: 75px;
+
+  width: 110px;
+  height: 110px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border-radius: 25px;
+}
+
+.temperature-display {
+  font-size: clamp(50px, 8vw, 80px);
+
+  line-height: 1;
+
+  margin: 10px 0;
+
+  font-weight: 800;
+}
+
+.current-weather-main h2 {
+  margin: 5px 0;
+}
+
+.current-weather-main p {
+  color: #98aca0;
+  margin: 0;
+}
+
+/* =====================================================
+   CURRENT WEATHER STATS
+===================================================== */
+
+.current-weather-stats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(120px, 1fr));
+
+  gap: 14px;
+
+  margin-top: 30px;
+}
+
+.weather-stat {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 17px;
+
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.weather-stat-icon {
+  font-size: 26px;
+}
+
+.weather-stat div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.weather-stat small {
+  color: #8da096;
+}
+
+.weather-stat strong {
+  font-size: 16px;
+}
+
+.weather-location-info {
+  margin-top: 20px;
+
+  color: #799086;
+
+  font-size: 13px;
+}
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+
+.weather-section {
+  margin-top: 25px;
+
+  padding: 27px;
+
+  border-radius: 22px;
+
+  background: rgba(8, 28, 19, 0.78);
+
+  border: 1px solid rgba(75, 229, 138, 0.1);
+}
+
+.weather-section h2 {
+  margin-top: 8px;
+  margin-bottom: 20px;
+}
+
+.weather-section-heading {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 20px;
+
+  margin-bottom: 20px;
+}
+
+.weather-section-heading h2 {
+  margin-bottom: 0;
+}
+
+/* =====================================================
+   AGRICULTURAL INTELLIGENCE
+===================================================== */
+
+.agriculture-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+.agriculture-advice-card {
+  padding: 20px;
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(75, 229, 138, 0.07),
+      rgba(255, 255, 255, 0.015)
+    );
+
+  border: 1px solid rgba(75, 229, 138, 0.1);
+}
+
+.advice-icon {
+  font-size: 34px;
+
+  margin-bottom: 12px;
+}
+
+.agriculture-advice-card h3 {
+  margin: 0 0 8px;
+}
+
+.agriculture-advice-card p {
+  margin: 0;
+
+  color: #9caf9f;
+
+  line-height: 1.6;
+}
+
+/* =====================================================
+   WEATHER ALERTS
+===================================================== */
+
+.weather-alert-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+.weather-alert {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 15px;
+
+  padding: 17px;
+
+  border-radius: 14px;
+}
+
+.weather-alert p {
+  margin: 6px 0 0;
+
+  line-height: 1.5;
+
+  color: #aabbb1;
+}
+
+.alert-icon {
+  font-size: 27px;
+}
+
+.weather-alert-high {
+  background: rgba(255, 79, 79, 0.08);
+
+  border: 1px solid rgba(255, 79, 79, 0.18);
+}
+
+.weather-alert-medium {
+  background: rgba(255, 184, 76, 0.07);
+
+  border: 1px solid rgba(255, 184, 76, 0.16);
+}
+
+.weather-alert-low {
+  background: rgba(75, 229, 138, 0.07);
+
+  border: 1px solid rgba(75, 229, 138, 0.14);
+}
+
+/* =====================================================
+   HOURLY FORECAST
+===================================================== */
+
+.hourly-scroll {
+  display: flex;
+
+  gap: 12px;
+
+  overflow-x: auto;
+
+  padding-bottom: 10px;
+
+  scrollbar-width: thin;
+}
+
+.hourly-card {
+  min-width: 115px;
+
+  padding: 17px 12px;
+
+  border-radius: 16px;
+
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 9px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hourly-card > span {
+  color: #9bad9f;
+
+  font-size: 13px;
+}
+
+.hourly-card strong {
+  font-size: 20px;
+}
+
+.hourly-card small {
+  color: #8fa398;
+}
+
+.hourly-icon {
+  font-size: 30px;
+}
+
+/* =====================================================
+   7 DAY FORECAST
+===================================================== */
+
+.daily-forecast-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, minmax(130px, 1fr));
+
+  gap: 12px;
+
+  overflow-x: auto;
+
+  padding-bottom: 8px;
+}
+
+.daily-weather-card {
+  min-width: 130px;
+
+  padding: 18px 14px;
+
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  text-align: center;
+}
+
+.daily-icon {
+  font-size: 35px;
+
+  margin: 14px 0 8px;
+}
+
+.daily-condition {
+  display: block;
+
+  min-height: 34px;
+
+  color: #9caf9f;
+
+  font-size: 12px;
+}
+
+.daily-temperature {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  margin: 13px 0;
+}
+
+.daily-temperature strong {
+  font-size: 21px;
+}
+
+.daily-temperature span {
+  color: #879b90;
+}
+
+.daily-details {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+
+  color: #8ea096;
+
+  font-size: 12px;
+}
+
+/* =====================================================
+   FARMING TIPS
+===================================================== */
+
+.weather-tips {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.weather-tip {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  border-radius: 13px;
+
+  background: rgba(75, 229, 138, 0.055);
+}
+
+.weather-tip > span {
+  color: #4be58a;
+
+  font-weight: 900;
+}
+
+.weather-tip p {
+  margin: 0;
+
+  color: #a7b8ae;
+
+  line-height: 1.5;
+}
+
+/* =====================================================
+   NOTICE
+===================================================== */
+
+.weather-notice {
+  margin-bottom: 20px;
+
+  padding: 14px 17px;
+
+  border-radius: 12px;
+
+  background: rgba(255, 190, 70, 0.08);
+
+  border: 1px solid rgba(255, 190, 70, 0.15);
+
+  color: #e2c88c;
+
+  line-height: 1.5;
+}
+
+/* =====================================================
+   DISCLAIMER
+===================================================== */
+
+.weather-disclaimer {
+  margin-top: 25px;
+
+  padding: 17px;
+
+  border-radius: 13px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  color: #788c81;
+
+  line-height: 1.6;
+
+  font-size: 13px;
+}
+
+/* =====================================================
+   LOADING / ERROR
+===================================================== */
+
+.weather-loading,
+.weather-error-screen {
+  min-height: 60vh;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+
+  padding: 30px;
+}
+
+.weather-loading-icon {
+  font-size: 65px;
+
+  margin-bottom: 20px;
+}
+
+.weather-loading p,
+.weather-error-screen p {
+  max-width: 550px;
+
+  color: #94a89d;
+
+  line-height: 1.6;
+}
+
+.weather-error-screen button {
+  margin-top: 15px;
+}
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1000px) {
+  .current-weather-stats {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .daily-forecast-grid {
+    grid-template-columns:
+      repeat(7, 140px);
+  }
+}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+  .weather-page {
+    padding: 15px;
+  }
+
+  .weather-hero {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    padding: 22px;
+  }
+
+  .weather-refresh-button {
+    width: 100%;
+  }
+
+  .current-weather-card {
+    padding: 22px;
+  }
+
+  .current-weather-main {
+    align-items: flex-start;
+
+    gap: 15px;
+  }
+
+  .current-weather-icon {
+    width: 75px;
+    height: 75px;
+
+    font-size: 48px;
+  }
+
+  .temperature-display {
+    font-size: 50px;
+  }
+
+  .current-weather-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .weather-section {
+    padding: 20px;
+  }
+
+  .weather-section-heading {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+  .voice-weather-button {
+    width: 100%;
+  }
+
+  .agriculture-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =====================================================
+   VERY SMALL MOBILE
+===================================================== */
+
+@media (max-width: 420px) {
+  .weather-page {
+    padding: 10px;
+  }
+
+  .weather-hero,
+  .current-weather-card,
+  .weather-section {
+    border-radius: 17px;
+  }
+
+  .current-weather-main {
+    flex-direction: column;
+  }
+}
+/* =====================================================
+   LOCATION INTELLIGENCE
+===================================================== */
+
+.weather-location-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  margin-bottom: 22px;
+  padding: 20px 24px;
+
+  border-radius: 18px;
+
+  background: rgba(8, 30, 20, 0.82);
+
+  border: 1px solid rgba(75, 229, 138, 0.13);
+}
+
+.weather-location-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 55px;
+  height: 55px;
+
+  flex-shrink: 0;
+
+  border-radius: 15px;
+
+  background: rgba(75, 229, 138, 0.08);
+
+  font-size: 28px;
+}
+
+.weather-location-content {
+  flex: 1;
+}
+
+.weather-location-content h2 {
+  margin: 5px 0;
+}
+
+.weather-location-content p {
+  margin: 0 0 4px;
+
+  color: #9caf9f;
+}
+
+.location-country {
+  color: #748a7e;
+
+  font-size: 13px;
+}
+
+.location-coordinates {
+  display: flex;
+  flex-direction: column;
+
+  align-items: flex-end;
+
+  gap: 3px;
+
+  color: #82968b;
+}
+
+.location-coordinates > span {
+  color: #4be58a;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.location-coordinates strong {
+  color: #c4d5cb;
+
+  font-size: 13px;
+}
+
+.location-coordinates small {
+  font-size: 11px;
+}
+
+/* MOBILE */
+
+@media (max-width: 700px) {
+  .weather-location-card {
+    align-items: flex-start;
+
+    flex-wrap: wrap;
+
+    padding: 18px;
+  }
+
+  .weather-location-content {
+    min-width: calc(100% - 80px);
+  }
+
+  .location-coordinates {
+    width: 100%;
+
+    align-items: flex-start;
+
+    padding-left: 73px;
+  }
+}
+/* =====================================================
+   KRISHIMITRA AI
+   SOWING & HARVEST INTELLIGENCE
+===================================================== */
+
+.sowing-harvest-section {
+  position: relative;
+}
+
+/* =====================================================
+   CROP CONTEXT
+===================================================== */
+
+.sowing-crop-context {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 16px 18px;
+  margin-bottom: 20px;
+
+  border-radius: 14px;
+
+  background: rgba(75, 229, 138, 0.05);
+
+  border: 1px solid rgba(75, 229, 138, 0.12);
+}
+
+.sowing-crop-context > span {
+  font-size: 32px;
+}
+
+.sowing-crop-context div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sowing-crop-context small {
+  color: #71877b;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+.sowing-crop-context strong {
+  color: #eafff2;
+
+  font-size: 18px;
+}
+
+
+/* =====================================================
+   SOWING + HARVEST GRID
+===================================================== */
+
+.sowing-harvest-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 18px;
+
+  margin-top: 20px;
+}
+
+
+/* =====================================================
+   MAIN CARDS
+===================================================== */
+
+.sowing-harvest-card {
+  padding: 20px;
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(75, 229, 138, 0.025)
+    );
+
+  border: 1px solid
+    rgba(75, 229, 138, 0.1);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.sowing-harvest-card:hover {
+  transform: translateY(-2px);
+
+  border-color:
+    rgba(75, 229, 138, 0.25);
+}
+
+.sowing-harvest-relevant {
+  border-color:
+    rgba(75, 229, 138, 0.28);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(75, 229, 138, 0.07),
+      rgba(255, 255, 255, 0.025)
+    );
+}
+
+
+/* =====================================================
+   CARD HEADER
+===================================================== */
+
+.sowing-harvest-card-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 17px;
+}
+
+.sowing-harvest-title {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+.sowing-harvest-icon {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  border-radius: 14px;
+
+  background:
+    rgba(75, 229, 138, 0.08);
+
+  font-size: 27px;
+}
+
+.sowing-harvest-title h3 {
+  margin: 3px 0 0;
+
+  color: #effff5;
+
+  font-size: 19px;
+}
+
+
+/* =====================================================
+   STATUS BADGE
+===================================================== */
+
+.sowing-harvest-status {
+  display: flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 7px 10px;
+
+  border-radius: 20px;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+.status-excellent {
+  color: #8dffb7;
+
+  background:
+    rgba(75, 229, 138, 0.1);
+}
+
+.status-good {
+  color: #a4ffc4;
+
+  background:
+    rgba(75, 229, 138, 0.08);
+}
+
+.status-caution {
+  color: #ffd083;
+
+  background:
+    rgba(255, 174, 65, 0.1);
+}
+
+.status-avoid {
+  color: #ff9b9b;
+
+  background:
+    rgba(255, 75, 75, 0.1);
+}
+
+
+/* =====================================================
+   CROP-STAGE RELEVANCE
+===================================================== */
+
+.sowing-stage-status {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 11px;
+
+  padding: 13px;
+
+  margin-bottom: 16px;
+
+  border-radius: 12px;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  border:
+    1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sowing-stage-status > span {
+  font-size: 21px;
+}
+
+.sowing-stage-status strong {
+  display: block;
+
+  color: #c9e8d5;
+
+  font-size: 12px;
+}
+
+.sowing-stage-status p {
+  margin: 5px 0 0;
+
+  color: #80998a;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+
+/* =====================================================
+   BEST WEATHER WINDOW
+===================================================== */
+
+.sowing-window-box {
+  padding: 16px;
+
+  margin-bottom: 15px;
+
+  border-radius: 14px;
+
+  background:
+    rgba(4, 20, 13, 0.42);
+
+  border:
+    1px solid rgba(75, 229, 138, 0.1);
+}
+
+.sowing-window-date {
+  margin-top: 9px;
+
+  color: #a6bcaf;
+
+  font-size: 13px;
+}
+
+.sowing-window-time {
+  margin-top: 5px;
+
+  color: #effff5;
+
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.sowing-window-meta {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+
+  margin-top: 12px;
+}
+
+.sowing-window-meta span {
+  padding: 6px 9px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(75, 229, 138, 0.06);
+
+  color: #9db3a6;
+
+  font-size: 11px;
+}
+
+
+/* =====================================================
+   NO WEATHER WINDOW
+===================================================== */
+
+.sowing-window-unavailable {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 11px;
+
+  padding: 15px;
+
+  margin-bottom: 15px;
+
+  border-radius: 13px;
+
+  background:
+    rgba(255, 91, 91, 0.045);
+
+  border:
+    1px solid rgba(255, 91, 91, 0.1);
+}
+
+.sowing-window-unavailable > span {
+  font-size: 22px;
+}
+
+.sowing-window-unavailable strong {
+  color: #ffc0c0;
+
+  font-size: 13px;
+}
+
+.sowing-window-unavailable p {
+  margin: 5px 0 0;
+
+  color: #9d8888;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+
+/* =====================================================
+   FARMER ADVICE MESSAGE
+===================================================== */
+
+.sowing-harvest-message {
+  margin: 0;
+
+  color: #9bb0a3;
+
+  font-size: 13px;
+
+  line-height: 1.65;
+}
+
+
+/* =====================================================
+   RAIN OUTLOOK
+===================================================== */
+
+.sowing-rain-outlook {
+  display: flex;
+
+  align-items: center;
+
+  gap: 17px;
+
+  margin-top: 20px;
+
+  padding: 19px;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(62, 150, 255, 0.07),
+      rgba(75, 229, 138, 0.035)
+    );
+
+  border:
+    1px solid rgba(80, 170, 255, 0.12);
+}
+
+.sowing-rain-icon {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 55px;
+  height: 55px;
+
+  border-radius: 15px;
+
+  background:
+    rgba(80, 170, 255, 0.08);
+
+  font-size: 31px;
+}
+
+.sowing-rain-content h3 {
+  margin: 4px 0 5px;
+
+  color: #effff5;
+
+  font-size: 17px;
+}
+
+.sowing-rain-content p {
+  margin: 0;
+
+  color: #91a99a;
+
+  line-height: 1.6;
+
+  font-size: 13px;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 800px) {
+
+  .sowing-harvest-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+@media (max-width: 550px) {
+
+  .sowing-harvest-card {
+    padding: 16px;
+  }
+
+  .sowing-harvest-card-header {
+    flex-direction: column;
+  }
+
+  .sowing-window-time {
+    font-size: 19px;
+  }
+
+  .sowing-rain-outlook {
+    align-items: flex-start;
+  }
+
+  .sowing-rain-icon {
+    min-width: 46px;
+    height: 46px;
+
+    font-size: 25px;
+  }
+
+}
+/* =====================================================
+   KRISHIMITRA AI - SEVERE WEATHER INTELLIGENCE
+===================================================== */
+
+.severe-weather-section {
+  position: relative;
+}
+
+/* OVERALL RISK BADGE */
+
+.severe-overall-level,
+.severe-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.severe-high {
+  color: #ffaaaa;
+  background: rgba(255, 70, 70, 0.1);
+  border: 1px solid rgba(255, 70, 70, 0.18);
+}
+
+.severe-medium {
+  color: #ffd18a;
+  background: rgba(255, 170, 60, 0.1);
+  border: 1px solid rgba(255, 170, 60, 0.18);
+}
+
+.severe-low {
+  color: #ffe99b;
+  background: rgba(255, 220, 80, 0.08);
+  border: 1px solid rgba(255, 220, 80, 0.15);
+}
+
+.severe-normal {
+  color: #9effbd;
+  background: rgba(75, 229, 138, 0.08);
+  border: 1px solid rgba(75, 229, 138, 0.15);
+}
+
+/* SUMMARY */
+
+.severe-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.severe-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 15px;
+
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.severe-summary-card > span {
+  font-size: 25px;
+}
+
+.severe-summary-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.severe-summary-card small {
+  color: #71877b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.severe-summary-card strong {
+  color: #effff5;
+  font-size: 17px;
+}
+
+/* ALERT LIST */
+
+.severe-alert-list {
+  display: grid;
+  gap: 14px;
+}
+
+/* INDIVIDUAL ALERT */
+
+.severe-alert-card {
+  display: flex;
+  gap: 16px;
+
+  padding: 18px;
+
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.severe-alert-high {
+  background: rgba(255, 65, 65, 0.045);
+  border-color: rgba(255, 65, 65, 0.15);
+}
+
+.severe-alert-medium {
+  background: rgba(255, 170, 50, 0.04);
+  border-color: rgba(255, 170, 50, 0.13);
+}
+
+.severe-alert-low {
+  border-color: rgba(255, 220, 80, 0.12);
+}
+
+.severe-alert-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 52px;
+  height: 52px;
+
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  font-size: 28px;
+}
+
+.severe-alert-content {
+  flex: 1;
+}
+
+.severe-alert-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.severe-alert-header h3 {
+  margin: 4px 0 0;
+  color: #effff5;
+  font-size: 18px;
+}
+
+.severe-alert-time {
+  margin-top: 9px;
+  color: #82988b;
+  font-size: 12px;
+}
+
+.severe-alert-content > p {
+  color: #9bb0a3;
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+/* RECOMMENDED ACTION */
+
+.severe-alert-action {
+  display: flex;
+  gap: 10px;
+
+  margin-top: 13px;
+  padding: 13px;
+
+  border-radius: 11px;
+
+  background: rgba(75, 229, 138, 0.045);
+  border: 1px solid rgba(75, 229, 138, 0.08);
+}
+
+.severe-alert-action > span {
+  font-size: 19px;
+}
+
+.severe-alert-action strong {
+  color: #a9f5c4;
+  font-size: 12px;
+}
+
+.severe-alert-action p {
+  margin: 4px 0 0;
+  color: #8da294;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* SAFE WEATHER */
+
+.severe-weather-safe {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 18px;
+
+  border-radius: 15px;
+
+  background: rgba(75, 229, 138, 0.05);
+  border: 1px solid rgba(75, 229, 138, 0.12);
+}
+
+.severe-weather-safe > span {
+  font-size: 30px;
+}
+
+.severe-weather-safe strong {
+  color: #b4ffcc;
+}
+
+.severe-weather-safe p {
+  margin: 5px 0 0;
+  color: #8da294;
+  font-size: 13px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 850px) {
+  .severe-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 550px) {
+  .severe-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .severe-alert-card {
+    flex-direction: column;
+  }
+
+  .severe-alert-header {
+    flex-direction: column;
+  }
+
+  .severe-overall-level {
+    margin-top: 10px;
+  }
+}
+/* =====================================================
+   CROP-SPECIFIC WEATHER INTELLIGENCE
+===================================================== */
+
+.crop-weather-section {
+  position: relative;
+  margin-top: 24px;
+  padding: 28px;
+
+  border-radius: 22px;
+  border: 1px solid rgba(93, 230, 145, 0.12);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(11, 35, 24, 0.96),
+      rgba(5, 22, 15, 0.98)
+    );
+
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+
+  overflow: hidden;
+}
+
+/* subtle glow */
+
+.crop-weather-section::before {
+  content: "";
+  position: absolute;
+
+  width: 220px;
+  height: 220px;
+
+  top: -120px;
+  right: -80px;
+
+  border-radius: 50%;
+
+  background: rgba(75, 220, 130, 0.07);
+  filter: blur(35px);
+
+  pointer-events: none;
+}
+
+/* =====================================================
+   HEADING
+===================================================== */
+
+.crop-weather-section .weather-section-heading {
+  position: relative;
+  z-index: 1;
+}
+
+.crop-weather-section .weather-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-bottom: 10px;
+
+  color: #62e894;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+.crop-weather-section h2 {
+  margin: 0;
+
+  color: #f2fff6;
+
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 850;
+
+  line-height: 1.25;
+}
+
+.crop-weather-description {
+  max-width: 760px;
+
+  margin: 10px 0 0;
+
+  color: #a7bdb0;
+
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* =====================================================
+   CROP + STAGE SELECTORS
+===================================================== */
+
+.crop-weather-selectors {
+  position: relative;
+  z-index: 1;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+
+  margin-top: 24px;
+}
+
+.crop-selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+
+  padding: 16px;
+
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.crop-selector-group:hover {
+  border-color: rgba(90, 230, 140, 0.18);
+
+  background: rgba(72, 200, 120, 0.035);
+}
+
+.crop-selector-group label {
+  color: #c7dbcf;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* =====================================================
+   SELECT BOX
+===================================================== */
+
+.crop-selector-group select {
+  width: 100%;
+  min-height: 48px;
+
+  padding: 0 42px 0 14px;
+
+  border-radius: 10px;
+
+  border: 1px solid rgba(108, 231, 151, 0.16);
+
+  outline: none;
+
+  background: #0b2117;
+
+  color: #effff4;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.crop-selector-group select:hover {
+  border-color: rgba(100, 235, 150, 0.35);
+
+  background: #0e291c;
+}
+
+.crop-selector-group select:focus {
+  border-color: rgba(92, 235, 145, 0.65);
+
+  box-shadow:
+    0 0 0 3px rgba(70, 220, 125, 0.08);
+}
+
+.crop-selector-group select option {
+  background: #0b2117;
+  color: #effff4;
+}
+
+/* =====================================================
+   WEATHER INTELLIGENCE CONTENT
+===================================================== */
+
+.crop-weather-section h3 {
+  color: #eafff0;
+
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.crop-weather-section p {
+  line-height: 1.65;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 700px) {
+  .crop-weather-section {
+    padding: 20px;
+    border-radius: 17px;
+  }
+
+  .crop-weather-selectors {
+    grid-template-columns: 1fr;
+  }
+
+  .crop-weather-section h2 {
+    font-size: 24px;
+  }
+
+  .crop-weather-description {
+    font-size: 13px;
+  }
+}

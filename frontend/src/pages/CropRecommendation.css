@@ -1,0 +1,586 @@
+/* =====================================================
+   KRISHIMITRA AI — CROP RECOMMENDATION
+===================================================== */
+
+.crop-recommendation-page {
+  min-height: 100vh;
+  padding: 32px 20px 60px;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(51, 180, 105, 0.08),
+      transparent 35%
+    ),
+    #07110d;
+  color: #effff5;
+}
+
+.crop-recommendation-container {
+  width: min(1150px, 100%);
+  margin: 0 auto;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.crop-recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 25px;
+  margin-bottom: 25px;
+  padding: 26px;
+  border-radius: 22px;
+  background: rgba(11, 31, 22, 0.92);
+  border: 1px solid rgba(89, 222, 139, 0.13);
+}
+
+.crop-ai-label {
+  color: #72e79d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.crop-recommendation-header h1 {
+  margin: 8px 0;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.1;
+}
+
+.crop-recommendation-header p {
+  max-width: 700px;
+  margin: 0;
+  color: #91aa9b;
+  line-height: 1.65;
+}
+
+.crop-recommendation-header button {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 225, 145, 0.18);
+  background: rgba(70, 220, 125, 0.07);
+  color: #b7ffce;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* =====================================================
+   INPUT SECTION
+===================================================== */
+
+.crop-input-section,
+.crop-results-section {
+  margin-top: 18px;
+  padding: 24px;
+  border-radius: 20px;
+  background: rgba(9, 27, 19, 0.92);
+  border: 1px solid rgba(89, 222, 139, 0.12);
+}
+
+.crop-input-section h2 {
+  margin: 0 0 20px;
+  font-size: 21px;
+}
+
+.crop-input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.crop-input-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crop-input-grid label > span {
+  color: #a9c0b2;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.crop-input-grid input,
+.crop-input-grid select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  outline: none;
+  background: rgba(255, 255, 255, 0.035);
+  color: #effff5;
+  font: inherit;
+}
+
+.crop-input-grid input:focus,
+.crop-input-grid select:focus {
+  border-color: rgba(80, 225, 135, 0.4);
+}
+
+.crop-input-grid select option {
+  background: #0c1c15;
+  color: white;
+}
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.crop-analysis-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.crop-analyze-button,
+.crop-reset-button {
+  padding: 12px 18px;
+  border-radius: 11px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.crop-analyze-button {
+  border: none;
+  background: #53dc86;
+  color: #06140c;
+}
+
+.crop-analyze-button:hover {
+  transform: translateY(-1px);
+}
+
+.crop-reset-button {
+  background: rgba(255, 255, 255, 0.06);
+  color: #c9d8cf;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* =====================================================
+   RESULTS
+===================================================== */
+
+.crop-results-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.crop-results-heading h2 {
+  margin: 6px 0 0;
+}
+
+.crop-results-heading > span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #86a493;
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 11px;
+}
+
+/* =====================================================
+   CROP CARDS
+===================================================== */
+
+.crop-recommendation-list {
+  display: grid;
+  gap: 14px;
+}
+
+.crop-result-card {
+  position: relative;
+  display: flex;
+  gap: 17px;
+  padding: 20px;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.best-crop-card {
+  background: rgba(70, 220, 125, 0.045);
+  border-color: rgba(70, 220, 125, 0.22);
+}
+
+.crop-result-rank {
+  position: absolute;
+  top: 12px;
+  right: 13px;
+  color: #6f8b7a;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.best-crop-card .crop-result-rank {
+  color: #70e89c;
+}
+
+.crop-result-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  height: 58px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 31px;
+}
+
+.crop-result-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.crop-result-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-right: 45px;
+  gap: 15px;
+}
+
+.crop-result-title h3 {
+  margin: 2px 0 3px;
+  font-size: 20px;
+}
+
+.crop-result-title span {
+  color: #728b7b;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.crop-result-title strong {
+  color: #73e99e;
+  font-size: 23px;
+}
+
+/* =====================================================
+   SCORE BAR
+===================================================== */
+
+.crop-score-bar {
+  width: 100%;
+  height: 7px;
+  margin: 12px 0 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.crop-score-bar > div {
+  height: 100%;
+  border-radius: inherit;
+  background: #58dc89;
+  transition: width 0.4s ease;
+}
+
+.crop-result-main > p {
+  margin: 0 0 14px;
+  color: #80998a;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+/* =====================================================
+   REASONS + RISKS
+===================================================== */
+
+.crop-reasons,
+.crop-risks {
+  margin-top: 11px;
+  padding: 13px 15px;
+  border-radius: 12px;
+}
+
+.crop-reasons {
+  background: rgba(70, 220, 125, 0.04);
+  border: 1px solid rgba(70, 220, 125, 0.09);
+}
+
+.crop-risks {
+  background: rgba(255, 175, 65, 0.035);
+  border: 1px solid rgba(255, 175, 65, 0.1);
+}
+
+.crop-reasons strong {
+  color: #9cf0ba;
+  font-size: 12px;
+}
+
+.crop-risks strong {
+  color: #ffd091;
+  font-size: 12px;
+}
+
+.crop-reasons ul,
+.crop-risks ul {
+  margin: 8px 0 0;
+  padding-left: 19px;
+  color: #8ea598;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 700px) {
+  .crop-recommendation-page {
+    padding: 18px 12px 40px;
+  }
+
+  .crop-recommendation-header {
+    flex-direction: column;
+  }
+
+  .crop-input-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .crop-results-heading {
+    flex-direction: column;
+  }
+
+  .crop-result-card {
+    flex-direction: column;
+  }
+
+  .crop-result-title {
+    padding-right: 0;
+  }
+
+  .crop-result-rank {
+    top: 16px;
+  }
+}
+/* =====================================================
+   LIVE FARM WEATHER
+===================================================== */
+
+.crop-live-weather {
+  margin-bottom: 22px;
+  padding: 16px;
+
+  border-radius: 14px;
+
+  background: rgba(71, 220, 126, 0.035);
+  border: 1px solid rgba(71, 220, 126, 0.1);
+}
+
+.crop-live-weather-button {
+  padding: 11px 16px;
+
+  border: 1px solid rgba(87, 230, 140, 0.2);
+  border-radius: 10px;
+
+  background: rgba(73, 220, 127, 0.09);
+  color: #aaffc6;
+
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.crop-live-weather-button:hover {
+  background: rgba(73, 220, 127, 0.14);
+}
+
+.crop-live-weather-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.crop-live-weather-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+
+  margin-top: 14px;
+  padding: 14px 16px;
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.crop-live-weather-info > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.crop-live-weather-info strong {
+  color: #effff5;
+  font-size: 14px;
+}
+
+.crop-live-weather-info span {
+  color: #839b8d;
+  font-size: 12px;
+}
+
+.crop-weather-error {
+  margin: 12px 0 0;
+
+  padding: 11px 13px;
+
+  border-radius: 9px;
+
+  background: rgba(255, 95, 70, 0.05);
+  border: 1px solid rgba(255, 95, 70, 0.12);
+
+  color: #ffb1a4;
+  font-size: 12px;
+}
+
+.crop-input-grid small {
+  color: #70d994;
+  font-size: 10px;
+}
+
+/* =====================================================
+   DATA USED FOR RECOMMENDATION
+===================================================== */
+
+.crop-analysis-source {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  margin-bottom: 17px;
+}
+
+.crop-analysis-source span {
+  padding: 7px 10px;
+
+  border-radius: 999px;
+
+  background: rgba(73, 220, 127, 0.05);
+  border: 1px solid rgba(73, 220, 127, 0.1);
+
+  color: #9ac9aa;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 650px) {
+  .crop-live-weather-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+/* =====================================================
+   SAVED SOIL REPORT
+===================================================== */
+
+.crop-saved-soil {
+  margin-bottom: 18px;
+  padding: 16px;
+
+  border-radius: 14px;
+
+  background: rgba(78, 180, 255, 0.035);
+  border: 1px solid rgba(78, 180, 255, 0.1);
+}
+
+.crop-saved-soil-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.crop-saved-soil-heading strong {
+  color: #effff5;
+  font-size: 14px;
+}
+
+.crop-saved-soil-heading p {
+  margin: 5px 0 0;
+
+  color: #839b8d;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.crop-use-soil-button {
+  flex-shrink: 0;
+
+  padding: 11px 16px;
+
+  border-radius: 10px;
+  border: 1px solid rgba(87, 230, 140, 0.2);
+
+  background: rgba(73, 220, 127, 0.09);
+  color: #aaffc6;
+
+  font-weight: 800;
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.crop-use-soil-button:hover {
+  background: rgba(73, 220, 127, 0.15);
+  transform: translateY(-1px);
+}
+
+.crop-soil-report-message {
+  margin: 12px 0 0;
+
+  padding: 9px 12px;
+
+  border-radius: 8px;
+
+  background: rgba(73, 220, 127, 0.05);
+
+  color: #8ee8ad;
+  font-size: 12px;
+}
+
+.crop-soil-report-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  margin-top: 13px;
+}
+
+.crop-soil-report-preview span {
+  padding: 7px 10px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  color: #a9c8b4;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 650px) {
+  .crop-saved-soil-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .crop-use-soil-button {
+    width: 100%;
+  }
+}
