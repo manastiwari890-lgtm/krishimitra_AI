@@ -9,33 +9,74 @@ const SOIL_API_URL =
 
 
 // =====================================================
+// HELPERS
+// =====================================================
+
+function isMissing(value) {
+  return (
+    value === undefined ||
+    value === null ||
+    value === ""
+  );
+}
+
+
+function validateNumber(field, value) {
+  if (!Number.isFinite(Number(value))) {
+    throw new Error(
+      `Invalid soil value: ${field}`
+    );
+  }
+}
+
+
+// =====================================================
 // VALIDATE SOIL VALUES
 // =====================================================
 
 function validateSoilData(data) {
+
+  // ---------------------------------------------------
+  // REQUIRED VALUES
+  // ---------------------------------------------------
+
   const requiredFields = [
     "nitrogen",
     "phosphorus",
     "potassium",
     "ph",
-    "moisture",
-    "temperature",
   ];
 
   for (const field of requiredFields) {
-    if (
-      data[field] === undefined ||
-      data[field] === null ||
-      data[field] === ""
-    ) {
+
+    if (isMissing(data[field])) {
       throw new Error(
         `Missing soil value: ${field}`
       );
     }
 
-    if (!Number.isFinite(Number(data[field]))) {
-      throw new Error(
-        `Invalid soil value: ${field}`
+    validateNumber(
+      field,
+      data[field]
+    );
+  }
+
+
+  // ---------------------------------------------------
+  // OPTIONAL VALUES
+  // ---------------------------------------------------
+
+  const optionalFields = [
+    "moisture",
+    "temperature",
+  ];
+
+  for (const field of optionalFields) {
+
+    if (!isMissing(data[field])) {
+      validateNumber(
+        field,
+        data[field]
       );
     }
   }
@@ -43,37 +84,90 @@ function validateSoilData(data) {
 
 
 // =====================================================
+// OPTIONAL NUMBER CONVERSION
+// =====================================================
+
+function optionalNumber(value) {
+
+  if (isMissing(value)) {
+    return null;
+  }
+
+  return Number(value);
+}
+
+
+// =====================================================
 // ANALYZE SOIL
 // =====================================================
 
-export async function analyzeSoilData(soilData) {
+export async function analyzeSoilData(
+  soilData
+) {
+
   validateSoilData(soilData);
 
+
+  // ===================================================
+  // BUILD BACKEND PAYLOAD
+  // ===================================================
+
   const payload = {
-    nitrogen: Number(soilData.nitrogen),
-    phosphorus: Number(soilData.phosphorus),
-    potassium: Number(soilData.potassium),
-    ph: Number(soilData.ph),
-    moisture: Number(soilData.moisture),
-    temperature: Number(soilData.temperature),
+
+    nitrogen:
+      Number(soilData.nitrogen),
+
+    phosphorus:
+      Number(soilData.phosphorus),
+
+    potassium:
+      Number(soilData.potassium),
+
+    npkUnit:
+      soilData.npkUnit || "kg/ha",
+
+    ph:
+      Number(soilData.ph),
+
+    // Missing optional values remain null.
+    // They must NOT become 0.
+    moisture:
+      optionalNumber(
+        soilData.moisture
+      ),
+
+    temperature:
+      optionalNumber(
+        soilData.temperature
+      ),
   };
+
+
+  // ===================================================
+  // SEND REQUEST
+  // ===================================================
 
   let response;
 
   try {
+
     response = await fetch(
       SOIL_API_URL,
       {
         method: "POST",
 
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type":
+            "application/json",
         },
 
-        body: JSON.stringify(payload),
+        body:
+          JSON.stringify(payload),
       }
     );
+
   } catch (error) {
+
     console.error(
       "KrishiMitra Soil API network error:",
       error
@@ -84,23 +178,42 @@ export async function analyzeSoilData(soilData) {
     );
   }
 
+
+  // ===================================================
+  // READ RESPONSE
+  // ===================================================
+
   let data;
 
   try {
+
     data = await response.json();
+
   } catch {
+
     throw new Error(
       "Soil Intelligence returned an invalid response."
     );
   }
 
+
+  // ===================================================
+  // BACKEND ERROR
+  // ===================================================
+
   if (!response.ok) {
+
     throw new Error(
       data?.detail ||
       data?.message ||
       "Soil analysis failed."
     );
   }
+
+
+  // ===================================================
+  // SUCCESS
+  // ===================================================
 
   return data;
 }

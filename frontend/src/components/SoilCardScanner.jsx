@@ -118,6 +118,112 @@ function SoilCardScanner({
   };
 
   // =====================================================
+  // OCR IMAGE PREPROCESSING
+  // Improves contrast and resolution for table-heavy cards
+  // =====================================================
+
+  const preprocessImageForOCR = (file) => {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      image.onload = () => {
+        try {
+          const maxWidth = 2400;
+          const scale = Math.max(
+            1,
+            Math.min(2.5, maxWidth / image.width)
+          );
+
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(image.width * scale);
+          canvas.height = Math.round(image.height * scale);
+
+          const context = canvas.getContext("2d", {
+            willReadFrequently: true,
+          });
+
+          if (!context) {
+            throw new Error("Canvas context unavailable.");
+          }
+
+          context.drawImage(
+            image,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+          const imageData = context.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+
+          const pixels = imageData.data;
+
+          for (let index = 0; index < pixels.length; index += 4) {
+            const red = pixels[index];
+            const green = pixels[index + 1];
+            const blue = pixels[index + 2];
+
+            const gray =
+              0.299 * red +
+              0.587 * green +
+              0.114 * blue;
+
+            // Increase contrast without using a hard threshold,
+            // which helps preserve thin table text.
+            const contrasted = Math.max(
+              0,
+              Math.min(255, (gray - 128) * 1.45 + 128)
+            );
+
+            pixels[index] = contrasted;
+            pixels[index + 1] = contrasted;
+            pixels[index + 2] = contrasted;
+          }
+
+          context.putImageData(imageData, 0, 0);
+
+          canvas.toBlob(
+            (blob) => {
+              URL.revokeObjectURL(objectUrl);
+
+              if (!blob) {
+                reject(
+                  new Error(
+                    "Could not prepare the image for OCR."
+                  )
+                );
+                return;
+              }
+
+              resolve(blob);
+            },
+            "image/png",
+            1
+          );
+        } catch (preprocessError) {
+          URL.revokeObjectURL(objectUrl);
+          reject(preprocessError);
+        }
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(
+          new Error("Could not load the selected image.")
+        );
+      };
+
+      image.src = objectUrl;
+    });
+  };
+
+  // =====================================================
   // OCR SCANNER
   // =====================================================
 
@@ -163,11 +269,36 @@ function SoilCardScanner({
       });
 
       // =================================================
+      // OCR IMAGE PREPROCESSING
+      // =================================================
+
+      let imageForOCR = reportImage.file;
+
+      try {
+        imageForOCR = await preprocessImageForOCR(
+          reportImage.file
+        );
+      } catch (preprocessError) {
+        // If preprocessing fails, OCR still runs on the
+        // original image instead of failing the whole scan.
+        console.warn(
+          "Soil Health Card preprocessing skipped:",
+          preprocessError
+        );
+      }
+
+      // =================================================
       // OCR
+      // PSM 6 asks Tesseract to treat the card as one
+      // structured block, which is usually better for tables.
       // =================================================
 
       const result = await worker.recognize(
-        reportImage.file
+        imageForOCR,
+        {
+          preserve_interword_spaces: "1",
+          tessedit_pageseg_mode: "6",
+        }
       );
 
       const extractedText =
@@ -400,11 +531,44 @@ function SoilCardScanner({
     }
 
     // =================================================
+    // NPK UNIT
+    // Pass the detected report unit to AdvancedSoilTest.
+    // Use it only when the detected N/P/K units agree.
+    // =================================================
+
+    const detectedNpkUnits = [
+      getUnit("nitrogen"),
+      getUnit("phosphorus"),
+      getUnit("potassium"),
+    ].filter(Boolean);
+
+    if (
+      detectedNpkUnits.length > 0 &&
+      detectedNpkUnits.every(
+        (unit) => unit === detectedNpkUnits[0]
+      )
+    ) {
+      confirmed.npkUnit = detectedNpkUnits[0];
+    }
+
+    // =================================================
     // SEND VALUES TO AdvancedSoilTest
     // =================================================
 
     if (onValuesDetected) {
-      onValuesDetected(confirmed);
+      onValuesDetected({ ...confirmed });
+
+      // The manual fields are below the scanner. Move the
+      // user there so the transferred values are immediately
+      // visible and can be verified before analysis.
+      window.setTimeout(() => {
+        document
+          .querySelector(".manual-soil-heading")
+          ?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+      }, 100);
     }
 
     alert(
@@ -904,8 +1068,8 @@ function SoilCardScanner({
 
         <p>
           {language === "hi"
-            ? "कार्ड को सीधा रखें, अच्छी रोशनी में फोटो लें, shadow से बचें और nutrient table को साफ रखें।"
-            : "Keep the card straight, use good lighting, avoid shadows and make sure the nutrient table is clearly visible."}
+            ? "कार्ड को सीधा रखें, अच्छी रोशनी में फोटो लें, shadow से बचें और N, P, K, pH वाली nutrient table को जितना संभव हो साफ और बड़ा रखें।"
+            : "Keep the card straight, use good lighting, avoid shadows, and make the N, P, K and pH nutrient table as clear and large as possible."}
         </p>
 
       </div>

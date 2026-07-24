@@ -1,5 +1,6 @@
 // =====================================================
-// KRISHIMITRA AI - SOIL REPORT PARSER
+// KRISHIMITRA AI - SOIL REPORT PARSER V2.1
+// OCR-TOLERANT + CHEMICAL FORMULA SAFE
 // =====================================================
 
 const cleanText = (text = "") => {
@@ -7,21 +8,27 @@ const cleanText = (text = "") => {
     .replace(/\r/g, "\n")
     .replace(/[|]/g, " ")
     .replace(/[ \t]+/g, " ")
+    .replace(/kg\s*\/?\s*ha/gi, "kg/ha")
+    .replace(/k[gqe]\s*\/?\s*ha/gi, "kg/ha")
+    .replace(/mg\s*\/?\s*kg/gi, "mg/kg")
     .trim();
 };
 
 // =====================================================
-// CONVERT OCR NUMBER
+// CLEAN OCR NUMBER
 // =====================================================
 
-const cleanNumber = (value) => {
+const cleanNumber = (value = "") => {
   if (!value) return "";
 
-  const cleaned = value.replace(",", ".");
+  const cleaned = String(value)
+    .replace(",", ".")
+    .replace(/[Oo]/g, "0")
+    .trim();
 
   const number = Number(cleaned);
 
-  if (Number.isNaN(number)) {
+  if (!Number.isFinite(number)) {
     return "";
   }
 
@@ -29,19 +36,23 @@ const cleanNumber = (value) => {
 };
 
 // =====================================================
-// FIND FIRST MATCH
+// FIND FIRST VALID MATCH
 // =====================================================
 
 const findMatch = (text, patterns) => {
   for (const pattern of patterns) {
     const match = text.match(pattern);
 
-    if (match) {
-      return {
-        value: cleanNumber(match[1]),
-        unit: match[2] || "",
-      };
-    }
+    if (!match?.[1]) continue;
+
+    const value = cleanNumber(match[1]);
+
+    if (value === "") continue;
+
+    return {
+      value,
+      unit: match[2] || "",
+    };
   }
 
   return {
@@ -55,14 +66,15 @@ const findMatch = (text, patterns) => {
 // =====================================================
 
 const normalizeUnit = (unit = "") => {
-  const cleaned = unit
+  const cleaned = String(unit)
     .toLowerCase()
     .replace(/\s+/g, "")
-    .replace("hectare", "ha");
+    .replace(/hectare/g, "ha");
 
   if (
     cleaned.includes("kg/ha") ||
-    cleaned.includes("kgha")
+    cleaned.includes("kgha") ||
+    cleaned.includes("ke/ha")
   ) {
     return "kg/ha";
   }
@@ -78,7 +90,7 @@ const normalizeUnit = (unit = "") => {
     return "ppm";
   }
 
-  if (cleaned === "%") {
+  if (cleaned.includes("%")) {
     return "%";
   }
 
@@ -86,46 +98,98 @@ const normalizeUnit = (unit = "") => {
 };
 
 // =====================================================
+// COMMON OCR PATTERNS
+// =====================================================
+
+const NUMBER =
+  "([0-9Oo]+(?:[.,][0-9Oo]+)?)";
+
+const UNIT =
+  "(kg\\s*\\/?\\s*ha|k[gqe]\\s*\\/?\\s*ha|mg\\s*\\/?\\s*kg|ppm|%)?";
+
+// =====================================================
 // NITROGEN
 // =====================================================
 
 const extractNitrogen = (text) => {
   return findMatch(text, [
-    /available\s+nitrogen(?:\s*\(n\))?\s*[:=-]?\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `available\\s+nitrogen\\s*\\([^)]*\\)\\s*[:=\\-]?\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
 
-    /nitrogen\s*\(n\)\s*[:=-]?\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `available\\s+nitrogen\\s*[:=\\-]?\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
 
-    /nitrogen\s*[:=-]\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `nitrogen\\s*\\([^)]*\\)\\s*[:=\\-]?\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
+
+    new RegExp(
+      `\\bn\\s*[:=\\-]\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
   ]);
 };
 
 // =====================================================
 // PHOSPHORUS
+//
+// IMPORTANT:
+// Measurement is searched AFTER the closing ")".
+// Therefore digits inside P2O5 / P,0s / P;05 cannot
+// become the phosphorus measurement.
 // =====================================================
 
 const extractPhosphorus = (text) => {
   return findMatch(text, [
-    /available\s+phosph(?:orus|orous)(?:\s*\(p\))?\s*[:=-]?\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `available\\s+phosph(?:orus|orous)\\s*\\([^)]*\\)\\s*[:=\\-]?\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
 
-    /phosph(?:orus|orous)\s*\(p\)\s*[:=-]?\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `phosph(?:orus|orous)\\s*\\([^)]*\\)\\s*[:=\\-]?\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
 
-    /phosph(?:orus|orous)\s*[:=-]\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `available\\s+phosph(?:orus|orous)\\s*[:=\\-]\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
   ]);
 };
 
 // =====================================================
 // POTASSIUM
+//
+// Same protection for K2O / K,0 / K;0.
 // =====================================================
 
 const extractPotassium = (text) => {
   return findMatch(text, [
-    /available\s+potassium(?:\s*\(k\))?\s*[:=-]?\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `available\\s+potassium\\s*\\([^)]*\\)\\s*[:=\\-]?\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
 
-    /potassium\s*\(k\)\s*[:=-]?\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `potassium\\s*\\([^)]*\\)\\s*[:=\\-]?\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
 
-    /potassium\s*[:=-]\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `available\\s+potassium\\s*[:=\\-]\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
 
-    /potash\s*[:=-]\s*([0-9]+(?:[.,][0-9]+)?)\s*(kg\s*\/?\s*ha|ppm|mg\s*\/?\s*kg)?/i,
+    new RegExp(
+      `potash\\s*[:=\\-]\\s*${NUMBER}\\s*${UNIT}`,
+      "i"
+    ),
   ]);
 };
 
@@ -135,28 +199,34 @@ const extractPotassium = (text) => {
 
 const extractPH = (text) => {
   const patterns = [
-    /soil\s*p\s*\.?\s*h\s*\.?\s*[:=-]?\s*([0-9]+(?:[.,][0-9]+)?)/i,
+    new RegExp(
+      `soil\\s*p\\s*\\.?\\s*h\\s*\\.?[^0-9Oo]{0,15}${NUMBER}`,
+      "i"
+    ),
 
-    /\bp\s*\.?\s*h\s*\.?\s*(?:value)?\s*[:=-]?\s*([0-9]+(?:[.,][0-9]+)?)/i,
+    new RegExp(
+      `\\bp\\s*\\.?\\s*h\\s*\\.?\\s*(?:value)?[^0-9Oo]{0,15}${NUMBER}`,
+      "i"
+    ),
   ];
 
   for (const pattern of patterns) {
     const match = text.match(pattern);
 
-    if (match?.[1]) {
-      const value = cleanNumber(match[1]);
-      const number = Number(value);
+    if (!match?.[1]) continue;
 
-      if (
-        !Number.isNaN(number) &&
-        number >= 0 &&
-        number <= 14
-      ) {
-        return {
-          value,
-          unit: "",
-        };
-      }
+    const value = cleanNumber(match[1]);
+    const number = Number(value);
+
+    if (
+      Number.isFinite(number) &&
+      number >= 0 &&
+      number <= 14
+    ) {
+      return {
+        value,
+        unit: "",
+      };
     }
   }
 
@@ -202,7 +272,7 @@ export const parseSoilReport = (ocrText = "") => {
 };
 
 // =====================================================
-// SIMPLE VALUE FORMAT FOR AdvancedSoilTest
+// SIMPLE VALUES FOR AdvancedSoilTest
 // =====================================================
 
 export const getSimpleSoilValues = (parsedReport) => {
