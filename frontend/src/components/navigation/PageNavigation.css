@@ -1,0 +1,841 @@
+/* =====================================================
+   KRISHIMITRA AI
+   GLOBAL PAGE NAVIGATION
+===================================================== */
+
+
+/* =====================================================
+   MAIN NAVIGATION
+===================================================== */
+
+.page-navigation {
+  position: relative;
+  z-index: 1000;
+
+  width: 100%;
+
+  background:
+    rgba(8, 31, 22, 0.94);
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.12);
+
+  backdrop-filter:
+    blur(16px);
+
+  -webkit-backdrop-filter:
+    blur(16px);
+}
+
+
+/* =====================================================
+   INNER CONTAINER
+===================================================== */
+
+.page-navigation-inner {
+  width: min(1440px, calc(100% - 40px));
+
+  min-height: 72px;
+
+  margin:
+    0 auto;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    24px;
+}
+
+
+/* =====================================================
+   LEFT AREA
+===================================================== */
+
+.page-navigation-left {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    14px;
+
+  flex-shrink:
+    0;
+}
+
+
+/* =====================================================
+   BACK BUTTON
+===================================================== */
+
+.page-navigation-back {
+  height:
+    42px;
+
+  padding:
+    0 14px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    7px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius:
+    12px;
+
+  background:
+    rgba(255, 255, 255, 0.07);
+
+  color:
+    #f4fff8;
+
+  font-family:
+    inherit;
+
+  font-size:
+    14px;
+
+  font-weight:
+    700;
+
+  cursor:
+    pointer;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+
+.page-navigation-back:hover {
+  background:
+    rgba(255, 255, 255, 0.12);
+
+  border-color:
+    rgba(255, 255, 255, 0.2);
+
+  transform:
+    translateY(-1px);
+}
+
+
+.page-navigation-back:active {
+  transform:
+    translateY(0);
+}
+
+
+.page-navigation-back-arrow {
+  font-size:
+    19px;
+
+  line-height:
+    1;
+}
+
+
+/* =====================================================
+   BRAND
+===================================================== */
+
+.page-navigation-brand {
+  padding:
+    0;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    9px;
+
+  border:
+    0;
+
+  background:
+    transparent;
+
+  color:
+    #ffffff;
+
+  font-family:
+    inherit;
+
+  cursor:
+    pointer;
+}
+
+
+.page-navigation-brand-icon {
+  width:
+    38px;
+
+  height:
+    38px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  border-radius:
+    12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #3ca75c,
+      #1e7544
+    );
+
+  box-shadow:
+    0 7px 18px rgba(29, 117, 68, 0.28);
+
+  font-size:
+    19px;
+}
+
+
+.page-navigation-brand-content {
+  display:
+    flex;
+
+  align-items:
+    baseline;
+
+  gap:
+    5px;
+}
+
+
+.page-navigation-brand-content strong {
+  font-size:
+    18px;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    -0.3px;
+}
+
+
+.page-navigation-brand-content small {
+  color:
+    #86d79d;
+
+  font-size:
+    11px;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    0.7px;
+}
+
+
+/* =====================================================
+   DESKTOP MODULE LINKS
+===================================================== */
+
+.page-navigation-links {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    4px;
+
+  flex:
+    1;
+}
+
+
+.page-navigation-link {
+  min-height:
+    40px;
+
+  padding:
+    0 11px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    6px;
+
+  border-radius:
+    11px;
+
+  color:
+    rgba(255, 255, 255, 0.72);
+
+  text-decoration:
+    none;
+
+  white-space:
+    nowrap;
+
+  font-size:
+    13px;
+
+  font-weight:
+    700;
+
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+
+.page-navigation-link:hover {
+  color:
+    #ffffff;
+
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  transform:
+    translateY(-1px);
+}
+
+
+/* =====================================================
+   ACTIVE PAGE
+===================================================== */
+
+.page-navigation-link-active {
+  color:
+    #ffffff;
+
+  background:
+    rgba(71, 173, 99, 0.2);
+
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(113, 214, 140, 0.18);
+}
+
+
+.page-navigation-link-active:hover {
+  background:
+    rgba(71, 173, 99, 0.25);
+}
+
+
+/* =====================================================
+   RIGHT ACTIONS
+===================================================== */
+
+.page-navigation-actions {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    10px;
+
+  flex-shrink:
+    0;
+}
+
+
+/* =====================================================
+   DASHBOARD BUTTON
+===================================================== */
+
+.page-navigation-home {
+  height:
+    42px;
+
+  padding:
+    0 14px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    7px;
+
+  border:
+    1px solid rgba(120, 218, 147, 0.22);
+
+  border-radius:
+    12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(62, 163, 91, 0.24),
+      rgba(33, 117, 67, 0.2)
+    );
+
+  color:
+    #f2fff5;
+
+  font-family:
+    inherit;
+
+  font-size:
+    13px;
+
+  font-weight:
+    750;
+
+  cursor:
+    pointer;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+
+.page-navigation-home:hover {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(72, 184, 104, 0.32),
+      rgba(38, 132, 75, 0.28)
+    );
+
+  border-color:
+    rgba(130, 228, 157, 0.35);
+
+  transform:
+    translateY(-1px);
+}
+
+
+/* =====================================================
+   MOBILE MENU BUTTON
+===================================================== */
+
+.page-navigation-menu-button {
+  width:
+    42px;
+
+  height:
+    42px;
+
+  padding:
+    0;
+
+  display:
+    none;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  flex-direction:
+    column;
+
+  gap:
+    5px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius:
+    12px;
+
+  background:
+    rgba(255, 255, 255, 0.07);
+
+  cursor:
+    pointer;
+}
+
+
+.page-navigation-menu-button span {
+  width:
+    18px;
+
+  height:
+    2px;
+
+  border-radius:
+    10px;
+
+  background:
+    #ffffff;
+
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+
+/* =====================================================
+   HAMBURGER -> CLOSE ICON
+===================================================== */
+
+.page-navigation-menu-button-open span:nth-child(1) {
+  transform:
+    translateY(7px)
+    rotate(45deg);
+}
+
+
+.page-navigation-menu-button-open span:nth-child(2) {
+  opacity:
+    0;
+}
+
+
+.page-navigation-menu-button-open span:nth-child(3) {
+  transform:
+    translateY(-7px)
+    rotate(-45deg);
+}
+
+
+/* =====================================================
+   MOBILE NAVIGATION PANEL
+===================================================== */
+
+.page-navigation-mobile {
+  display:
+    none;
+
+  max-height:
+    0;
+
+  overflow:
+    hidden;
+
+  opacity:
+    0;
+
+  border-top:
+    1px solid transparent;
+
+  transition:
+    max-height 240ms ease,
+    opacity 180ms ease,
+    border-color 180ms ease;
+}
+
+
+.page-navigation-mobile-open {
+  max-height:
+    520px;
+
+  opacity:
+    1;
+
+  border-top-color:
+    rgba(255, 255, 255, 0.08);
+}
+
+
+.page-navigation-mobile-links {
+  width:
+    min(100% - 28px, 720px);
+
+  margin:
+    0 auto;
+
+  padding:
+    12px 0 18px;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap:
+    8px;
+}
+
+
+.page-navigation-mobile-link {
+  min-height:
+    48px;
+
+  padding:
+    0 14px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    9px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius:
+    12px;
+
+  background:
+    rgba(255, 255, 255, 0.045);
+
+  color:
+    rgba(255, 255, 255, 0.78);
+
+  text-decoration:
+    none;
+
+  font-size:
+    13px;
+
+  font-weight:
+    700;
+}
+
+
+.page-navigation-mobile-link-active {
+  color:
+    #ffffff;
+
+  border-color:
+    rgba(108, 210, 136, 0.25);
+
+  background:
+    rgba(62, 163, 91, 0.2);
+}
+
+
+/* =====================================================
+   FOCUS ACCESSIBILITY
+===================================================== */
+
+.page-navigation button:focus-visible,
+.page-navigation a:focus-visible {
+  outline:
+    3px solid rgba(122, 221, 150, 0.55);
+
+  outline-offset:
+    3px;
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1120px) {
+
+  .page-navigation-inner {
+    width:
+      min(100% - 28px, 1440px);
+
+    gap:
+      14px;
+  }
+
+
+  .page-navigation-link {
+    padding:
+      0 8px;
+
+    font-size:
+      12px;
+  }
+
+
+  .page-navigation-home-text {
+    display:
+      none;
+  }
+
+
+  .page-navigation-home {
+    width:
+      42px;
+
+    padding:
+      0;
+  }
+}
+
+
+/* =====================================================
+   MOBILE NAVIGATION MODE
+===================================================== */
+
+@media (max-width: 900px) {
+
+  .page-navigation-inner {
+    min-height:
+      66px;
+  }
+
+
+  .page-navigation-links {
+    display:
+      none;
+  }
+
+
+  .page-navigation-menu-button {
+    display:
+      flex;
+  }
+
+
+  .page-navigation-mobile {
+    display:
+      block;
+  }
+
+
+  .page-navigation-home {
+    display:
+      none;
+  }
+}
+
+
+/* =====================================================
+   SMALL MOBILE
+===================================================== */
+
+@media (max-width: 560px) {
+
+  .page-navigation-inner {
+    width:
+      calc(100% - 20px);
+
+    gap:
+      8px;
+  }
+
+
+  .page-navigation-left {
+    gap:
+      9px;
+  }
+
+
+  .page-navigation-back {
+    width:
+      40px;
+
+    height:
+      40px;
+
+    padding:
+      0;
+  }
+
+
+  .page-navigation-back-text {
+    display:
+      none;
+  }
+
+
+  .page-navigation-brand-icon {
+    width:
+      36px;
+
+    height:
+      36px;
+  }
+
+
+  .page-navigation-brand-content strong {
+    font-size:
+      16px;
+  }
+
+
+  .page-navigation-brand-content small {
+    font-size:
+      9px;
+  }
+
+
+  .page-navigation-menu-button {
+    width:
+      40px;
+
+    height:
+      40px;
+  }
+
+
+  .page-navigation-mobile-links {
+    width:
+      calc(100% - 20px);
+
+    grid-template-columns:
+      1fr;
+  }
+}
+
+
+/* =====================================================
+   VERY SMALL DEVICES
+===================================================== */
+
+@media (max-width: 370px) {
+
+  .page-navigation-brand-content small {
+    display:
+      none;
+  }
+
+
+  .page-navigation-brand-content strong {
+    font-size:
+      15px;
+  }
+}

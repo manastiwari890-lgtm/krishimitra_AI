@@ -10,6 +10,7 @@ import {
 import { getLocationName } from "../services/locationService";
 
 import "./CropRecommendation.css";
+import PageNavigation from "../components/navigation/PageNavigation";
 
 function CropRecommendation() {
   const [language, setLanguage] = useState("hi");
@@ -293,6 +294,8 @@ function CropRecommendation() {
   // =====================================================
 
   return (
+    <>
+     <PageNavigation />
     <main className="crop-recommendation-page">
       <div className="crop-recommendation-container">
         {/* =================================================
@@ -802,6 +805,7 @@ function CropRecommendation() {
         )}
       </div>
     </main>
+    </>
   );
 }
 

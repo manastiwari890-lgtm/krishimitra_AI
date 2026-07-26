@@ -16,6 +16,7 @@ import {
 } from "../services/diseaseDetectionService";
 
 import { analyzeDiseaseWeatherRisk } from "../utils/diseaseWeatherRisk";
+import PageNavigation from "../components/navigation/PageNavigation";
 
 function DiseaseDetection() {
   // =====================================================
@@ -217,6 +218,8 @@ function DiseaseDetection() {
   // =====================================================
 
   return (
+    <>
+      <PageNavigation />
     <main className="disease-page">
       {/* =================================================
           HEADER
@@ -679,6 +682,7 @@ function DiseaseDetection() {
         not replace professional agricultural diagnosis.
       </div>
     </main>
+    </>
   );
 }
 

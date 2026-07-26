@@ -1,3 +1,4 @@
+import PageNavigation from "../components/navigation/PageNavigation";
 import Farm3DScene from "../components/farm3d/Farm3DScene";
 
 // =====================================================
@@ -7,6 +8,8 @@ import Farm3DScene from "../components/farm3d/Farm3DScene";
 
 export default function Farm3D() {
   return (
+    <>
+      <PageNavigation />
     <main className="farm3d-page">
       <section
         style={{
@@ -52,5 +55,6 @@ export default function Farm3D() {
         <Farm3DScene />
       </section>
     </main>
+    </>
   );
 }

@@ -9,6 +9,7 @@ import AdvancedSoilTest from "../components/AdvancedSoilTest";
 import SoilWeatherIntelligence from "../components/SoilWeatherIntelligence";
 
 import { analyzeSoilWeather } from "../utils/soilWeatherEngine";
+import PageNavigation from "../components/navigation/PageNavigation";
 
 function SoilFertility() {
   // =====================================================
@@ -725,6 +726,8 @@ function SoilFertility() {
   // =====================================================
 
   return (
+    <>
+      <PageNavigation />
     <div className="farmer-soil-page">
       {/* =================================================
           HEADER
@@ -1336,6 +1339,7 @@ function SoilFertility() {
         )}
       </main>
     </div>
+    </>
   );
 }
 

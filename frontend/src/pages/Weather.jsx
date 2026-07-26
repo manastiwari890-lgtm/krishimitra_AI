@@ -25,6 +25,7 @@ import SowingHarvestPlanner from "../components/weather/SowingHarvestPlanner";
 import SevereWeatherAlerts from "../components/weather/SevereWeatherAlerts";
 
 import "./Weather.css";
+import PageNavigation from "../components/navigation/PageNavigation";
 
 function Weather({ language = "hi" }) {
   // =====================================================
@@ -468,6 +469,8 @@ function Weather({ language = "hi" }) {
 
   if (loading && !weather) {
     return (
+      <>
+        <PageNavigation />
       <div className="weather-page">
         <div className="weather-loading">
           <div className="weather-loading-icon">🌦️</div>
@@ -485,6 +488,7 @@ function Weather({ language = "hi" }) {
           </p>
         </div>
       </div>
+      </>
     );
   }
 
@@ -494,6 +498,8 @@ function Weather({ language = "hi" }) {
 
   if (!weather) {
     return (
+      <>
+        <PageNavigation />
       <div className="weather-page">
         <div className="weather-error-screen">
           <div className="weather-loading-icon">📍</div>
@@ -515,6 +521,7 @@ function Weather({ language = "hi" }) {
           </button>
         </div>
       </div>
+      </>
     );
   }
 
@@ -523,7 +530,9 @@ function Weather({ language = "hi" }) {
   // =====================================================
 
   return (
-    <div className="weather-page">
+      <>
+        <PageNavigation />
+        <div className="weather-page">
       {/* =================================================
           HERO
       ================================================= */}
@@ -1196,6 +1205,7 @@ function Weather({ language = "hi" }) {
           : "KrishiMitra weather guidance is based on forecast data. Crop-specific warnings are weather-risk indicators, not diagnoses. Consider actual field conditions, crop requirements, soil conditions, product instructions and local agricultural advice before irrigation or chemical application."}
       </div>
     </div>
+    </>
   );
 }
 
