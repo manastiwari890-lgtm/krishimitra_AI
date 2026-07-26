@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 import { Canvas } from "@react-three/fiber";
 
@@ -11,6 +11,9 @@ import FarmFields from "./FarmFields";
 import CropField from "./CropField";
 import FarmVegetation from "./FarmVegetation";
 import FarmGroundDetails from "./FarmGroundDetails";
+import useFarmQuality from "./useFarmQuality";
+import FarmClouds from "./FarmClouds";
+import FarmRain from "./FarmRain";
 
 // =====================================================
 // KRISHIMITRA AI
@@ -38,7 +41,7 @@ import FarmGroundDetails from "./FarmGroundDetails";
 // FARM WORLD
 // =====================================================
 
-function FarmWorld() {
+function FarmWorld({ quality, rainEnabled }) {
   return (
     <>
       {/* ===============================================
@@ -64,9 +67,9 @@ function FarmWorld() {
       <directionalLight
         position={[12, 18, 10]}
         intensity={2}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        castShadow={quality.shadows}
+        shadow-mapSize-width={quality.shadowMapSize}
+        shadow-mapSize-height={quality.shadowMapSize}
         shadow-camera-left={-18}
         shadow-camera-right={18}
         shadow-camera-top={18}
@@ -89,13 +92,18 @@ function FarmWorld() {
         mieCoefficient={0.005}
         mieDirectionalG={0.8}
       />
+      <FarmClouds quality={quality} rainEnabled={rainEnabled} />
 
       {/* ===============================================
-          TERRAIN
-      =============================================== */}
+    RAIN SYSTEM
+=============================================== */}
+
+
+      {/* ===============================================
+    TERRAIN
+=============================================== */}
 
       <FarmTerrain />
-
       {/* ===============================================
           FARM FIELDS
       =============================================== */}
@@ -148,7 +156,7 @@ function FarmWorld() {
         enablePan
         enableRotate
         enableZoom
-        rotateSpeed={0.50}
+        rotateSpeed={0.5}
         minDistance={6}
         maxDistance={38}
         minPolarAngle={0.35}
@@ -172,6 +180,8 @@ function FarmLoadingScreen() {
 // =====================================================
 
 export default function Farm3DScene() {
+  const quality = useFarmQuality();
+  const [rainEnabled, setRainEnabled] = useState(false);
   return (
     <div
       style={{
@@ -195,12 +205,12 @@ export default function Farm3DScene() {
       ============================================= */}
 
       <Canvas
-        shadows
+        shadows={quality.shadows}
         // ===========================================
         // VERY IMPORTANT PERFORMANCE CHANGE
         // ===========================================
 
-        frameloop="demand"
+        frameloop={rainEnabled ? "always" : "demand"}
         // ===========================================
         // CAMERA
         // ===========================================
@@ -228,8 +238,7 @@ export default function Farm3DScene() {
         // 1 -> 1.5 gives a better performance /
         // quality balance.
         // ===========================================
-
-        dpr={[1, 1.5]}
+        dpr={rainEnabled ? Math.min(quality.dpr, 1.25) : quality.dpr}
         // ===========================================
         // WEBGL
         // ===========================================
@@ -254,7 +263,7 @@ export default function Farm3DScene() {
         onCreated={({ gl, scene }) => {
           gl.shadowMap.enabled = true;
 
-          gl.shadowMap.type = THREE.PCFSoftShadowMap;
+          gl.shadowMap.type = THREE.PCFShadowMap;
 
           // -----------------------------------------
           // FOG
@@ -264,9 +273,75 @@ export default function Farm3DScene() {
         }}
       >
         <Suspense fallback={<FarmLoadingScreen />}>
-          <FarmWorld />
+          <FarmWorld quality={quality} rainEnabled={rainEnabled} />
         </Suspense>
       </Canvas>
+      <div
+        style={{
+          position: "absolute",
+          top: "18px",
+          right: "18px",
+          zIndex: 10,
+
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: "8px",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setRainEnabled((current) => !current)}
+          style={{
+            border: rainEnabled
+              ? "1px solid rgba(147, 197, 253, 0.65)"
+              : "1px solid rgba(255,255,255,0.16)",
+
+            background: rainEnabled
+              ? "rgba(30, 64, 175, 0.82)"
+              : "rgba(7, 26, 18, 0.78)",
+
+            color: "#ffffff",
+
+            padding: "11px 16px",
+
+            borderRadius: "14px",
+
+            backdropFilter: "blur(12px)",
+
+            cursor: "pointer",
+
+            fontSize: "13px",
+
+            fontWeight: "700",
+
+            boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+          }}
+        >
+          {rainEnabled ? "🌧 Stop Rain Simulation" : "🌧 Simulate Rain"}
+        </button>
+
+        <div
+          style={{
+            padding: "6px 10px",
+            borderRadius: "10px",
+
+            background: "rgba(7, 26, 18, 0.68)",
+
+            color: "rgba(255,255,255,0.82)",
+
+            backdropFilter: "blur(10px)",
+
+            fontSize: "11px",
+
+            fontWeight: "600",
+
+            pointerEvents: "none",
+          }}
+        >
+          {rainEnabled ? "Simulation active" : "Manual weather preview"}
+        </div>
+      </div>
 
       {/* =============================================
           CAMERA HELP LABEL

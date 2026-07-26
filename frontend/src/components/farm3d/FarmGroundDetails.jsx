@@ -1,307 +1,611 @@
-import { useMemo } from "react";
+import * as THREE from "three";
+
+import {
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 
 
 // =====================================================
 // KRISHIMITRA AI
-// FARM GROUND DETAILS
+// OPTIMIZED FARM GROUND DETAILS
+// PERFORMANCE PASS 4
 // =====================================================
 //
-// Adds small environmental details that make the
-// procedural farm feel less empty and artificial.
+// Improvements:
 //
-// CURRENT:
-// - Natural stones
-// - Grass-edge patches
-// - Dry soil clumps
-// - Field boundary markers
-// - Path-side details
+// - Stones use InstancedMesh
+// - Soil clumps use InstancedMesh
+// - Wild grass uses InstancedMesh
+// - Boundary posts use InstancedMesh
+// - Shared geometries
+// - Shared materials
+// - Tiny decorative shadows removed
+// - Original positions preserved
 //
-// FUTURE:
-// - Real texture maps
-// - Fallen leaves
-// - Farm tools
-// - Fences
-// - Water structures
-// - GLB environmental props
 // =====================================================
 
 
 // =====================================================
-// NATURAL STONE
+// INSTANCED STONES
 // =====================================================
 
-function FarmStone({
-  position = [0, 0, 0],
-  scale = 1,
-  rotation = 0,
-}) {
-  return (
-    <mesh
-      position={position}
-      scale={[
-        scale,
-        scale * 0.55,
-        scale * 0.8,
-      ]}
-      rotation={[
+function InstancedStones({ stones }) {
+  const meshRef = useRef(null);
+
+  const geometry = useMemo(
+    () => new THREE.DodecahedronGeometry(0.22, 0),
+    [],
+  );
+
+  const material = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#777266",
+        roughness: 1,
+        metalness: 0,
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    if (!meshRef.current) {
+      return;
+    }
+
+    const dummy = new THREE.Object3D();
+
+    stones.forEach((position, index) => {
+      const stoneScale =
+        0.75 + (index % 4) * 0.13;
+
+      dummy.position.set(
+        position[0],
+        position[1],
+        position[2],
+      );
+
+      dummy.rotation.set(
         0.1,
-        rotation,
+        index * 0.72,
         0.08,
-      ]}
-      castShadow
-      receiveShadow
-    >
-      <dodecahedronGeometry
-        args={[0.22, 0]}
-      />
+      );
 
-      <meshStandardMaterial
-        color="#777266"
-        roughness={1}
-        metalness={0}
-      />
-    </mesh>
+      dummy.scale.set(
+        stoneScale,
+        stoneScale * 0.55,
+        stoneScale * 0.8,
+      );
+
+      dummy.updateMatrix();
+
+      meshRef.current.setMatrixAt(
+        index,
+        dummy.matrix,
+      );
+    });
+
+    meshRef.current.instanceMatrix.needsUpdate =
+      true;
+
+    meshRef.current.computeBoundingSphere();
+  }, [stones]);
+
+  return (
+    <instancedMesh
+      ref={meshRef}
+      args={[
+        geometry,
+        material,
+        stones.length,
+      ]}
+      castShadow={false}
+      receiveShadow={false}
+    />
   );
 }
 
 
 // =====================================================
-// SOIL CLUMP
+// INSTANCED SOIL CLUMPS
 // =====================================================
 
-function SoilClump({
-  position = [0, 0, 0],
-  scale = 1,
-  rotation = 0,
+function InstancedSoilClumps({
+  soilClumps,
 }) {
-  return (
-    <mesh
-      position={position}
-      scale={[
-        scale,
-        scale * 0.45,
-        scale * 0.7,
-      ]}
-      rotation={[
-        0,
-        rotation,
-        0,
-      ]}
-      castShadow
-      receiveShadow
-    >
-      <dodecahedronGeometry
-        args={[0.18, 0]}
-      />
+  const meshRef = useRef(null);
 
-      <meshStandardMaterial
-        color="#62432d"
-        roughness={1}
-        metalness={0}
-      />
-    </mesh>
+  const geometry = useMemo(
+    () => new THREE.DodecahedronGeometry(0.18, 0),
+    [],
+  );
+
+  const material = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: "#62432d",
+        roughness: 1,
+        metalness: 0,
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    if (!meshRef.current) {
+      return;
+    }
+
+    const dummy = new THREE.Object3D();
+
+    soilClumps.forEach(
+      (position, index) => {
+        const clumpScale =
+          0.7 + (index % 3) * 0.14;
+
+        dummy.position.set(
+          position[0],
+          position[1],
+          position[2],
+        );
+
+        dummy.rotation.set(
+          0,
+          index * 0.9,
+          0,
+        );
+
+        dummy.scale.set(
+          clumpScale,
+          clumpScale * 0.45,
+          clumpScale * 0.7,
+        );
+
+        dummy.updateMatrix();
+
+        meshRef.current.setMatrixAt(
+          index,
+          dummy.matrix,
+        );
+      },
+    );
+
+    meshRef.current.instanceMatrix.needsUpdate =
+      true;
+
+    meshRef.current.computeBoundingSphere();
+  }, [soilClumps]);
+
+  return (
+    <instancedMesh
+      ref={meshRef}
+      args={[
+        geometry,
+        material,
+        soilClumps.length,
+      ]}
+      castShadow={false}
+      receiveShadow={false}
+    />
   );
 }
 
 
 // =====================================================
-// WILD GRASS PATCH
+// INSTANCED WILD GRASS
 // =====================================================
 
-function WildGrassPatch({
-  position = [0, 0, 0],
-  scale = 1,
-  rotation = 0,
+function InstancedWildGrass({
+  wildGrass,
 }) {
-  return (
-    <group
-      position={position}
-      scale={scale}
-      rotation={[
-        0,
-        rotation,
-        0,
-      ]}
-    >
-      <mesh
-        position={[
-          -0.12,
-          0.18,
+  const bladeOneRef = useRef(null);
+  const bladeTwoRef = useRef(null);
+  const bladeThreeRef = useRef(null);
+  const bladeFourRef = useRef(null);
+
+  const geometries = useMemo(
+    () => ({
+      one: new THREE.ConeGeometry(
+        0.055,
+        0.42,
+        4,
+      ),
+
+      two: new THREE.ConeGeometry(
+        0.06,
+        0.52,
+        4,
+      ),
+
+      three: new THREE.ConeGeometry(
+        0.05,
+        0.4,
+        4,
+      ),
+
+      four: new THREE.ConeGeometry(
+        0.045,
+        0.36,
+        4,
+      ),
+    }),
+    [],
+  );
+
+  const materials = useMemo(
+    () => ({
+      one: new THREE.MeshStandardMaterial({
+        color: "#668b3f",
+        roughness: 1,
+      }),
+
+      two: new THREE.MeshStandardMaterial({
+        color: "#779b49",
+        roughness: 1,
+      }),
+
+      three: new THREE.MeshStandardMaterial({
+        color: "#527a38",
+        roughness: 1,
+      }),
+
+      four: new THREE.MeshStandardMaterial({
+        color: "#86a654",
+        roughness: 1,
+      }),
+    }),
+    [],
+  );
+
+  useEffect(() => {
+    const refs = [
+      bladeOneRef.current,
+      bladeTwoRef.current,
+      bladeThreeRef.current,
+      bladeFourRef.current,
+    ];
+
+    if (refs.some((mesh) => !mesh)) {
+      return;
+    }
+
+    const dummy = new THREE.Object3D();
+
+    wildGrass.forEach(
+      (position, index) => {
+        const patchScale =
+          0.75 + (index % 5) * 0.08;
+
+        const patchRotation =
+          index * 0.61;
+
+        // ---------------------------------------------
+        // BLADE 1
+        // ---------------------------------------------
+
+        dummy.position.set(
+          position[0] -
+            0.12 * patchScale,
+          position[1] +
+            0.18 * patchScale,
+          position[2],
+        );
+
+        dummy.rotation.set(
           0,
-        ]}
-        rotation={[
-          0,
-          0,
+          patchRotation,
           -0.2,
-        ]}
-        castShadow
-      >
-        <coneGeometry
-          args={[
-            0.055,
-            0.42,
-            4,
-          ]}
-        />
+        );
 
-        <meshStandardMaterial
-          color="#668b3f"
-          roughness={1}
-        />
-      </mesh>
+        dummy.scale.setScalar(
+          patchScale,
+        );
+
+        dummy.updateMatrix();
+
+        bladeOneRef.current.setMatrixAt(
+          index,
+          dummy.matrix,
+        );
 
 
-      <mesh
-        position={[
-          0.02,
-          0.23,
-          0.02,
-        ]}
-        rotation={[
+        // ---------------------------------------------
+        // BLADE 2
+        // ---------------------------------------------
+
+        dummy.position.set(
+          position[0] +
+            0.02 * patchScale,
+          position[1] +
+            0.23 * patchScale,
+          position[2] +
+            0.02 * patchScale,
+        );
+
+        dummy.rotation.set(
           0.05,
-          0,
+          patchRotation,
           0.05,
-        ]}
-        castShadow
-      >
-        <coneGeometry
-          args={[
-            0.06,
-            0.52,
-            4,
-          ]}
-        />
+        );
 
-        <meshStandardMaterial
-          color="#779b49"
-          roughness={1}
-        />
-      </mesh>
+        dummy.scale.setScalar(
+          patchScale,
+        );
+
+        dummy.updateMatrix();
+
+        bladeTwoRef.current.setMatrixAt(
+          index,
+          dummy.matrix,
+        );
 
 
-      <mesh
-        position={[
-          0.14,
-          0.17,
-          -0.04,
-        ]}
-        rotation={[
+        // ---------------------------------------------
+        // BLADE 3
+        // ---------------------------------------------
+
+        dummy.position.set(
+          position[0] +
+            0.14 * patchScale,
+          position[1] +
+            0.17 * patchScale,
+          position[2] -
+            0.04 * patchScale,
+        );
+
+        dummy.rotation.set(
           0,
-          0,
+          patchRotation,
           0.22,
-        ]}
-        castShadow
-      >
-        <coneGeometry
-          args={[
-            0.05,
-            0.4,
-            4,
-          ]}
-        />
+        );
 
-        <meshStandardMaterial
-          color="#527a38"
-          roughness={1}
-        />
-      </mesh>
+        dummy.scale.setScalar(
+          patchScale,
+        );
+
+        dummy.updateMatrix();
+
+        bladeThreeRef.current.setMatrixAt(
+          index,
+          dummy.matrix,
+        );
 
 
-      <mesh
-        position={[
-          -0.03,
-          0.15,
-          -0.12,
-        ]}
-        rotation={[
+        // ---------------------------------------------
+        // BLADE 4
+        // ---------------------------------------------
+
+        dummy.position.set(
+          position[0] -
+            0.03 * patchScale,
+          position[1] +
+            0.15 * patchScale,
+          position[2] -
+            0.12 * patchScale,
+        );
+
+        dummy.rotation.set(
           -0.1,
-          0,
+          patchRotation,
           -0.12,
-        ]}
-        castShadow
-      >
-        <coneGeometry
-          args={[
-            0.045,
-            0.36,
-            4,
-          ]}
-        />
+        );
 
-        <meshStandardMaterial
-          color="#86a654"
-          roughness={1}
-        />
-      </mesh>
-    </group>
+        dummy.scale.setScalar(
+          patchScale,
+        );
+
+        dummy.updateMatrix();
+
+        bladeFourRef.current.setMatrixAt(
+          index,
+          dummy.matrix,
+        );
+      },
+    );
+
+    refs.forEach((mesh) => {
+      mesh.instanceMatrix.needsUpdate =
+        true;
+
+      mesh.computeBoundingSphere();
+    });
+  }, [wildGrass]);
+
+  return (
+    <>
+      <instancedMesh
+        ref={bladeOneRef}
+        args={[
+          geometries.one,
+          materials.one,
+          wildGrass.length,
+        ]}
+        castShadow={false}
+        receiveShadow={false}
+      />
+
+      <instancedMesh
+        ref={bladeTwoRef}
+        args={[
+          geometries.two,
+          materials.two,
+          wildGrass.length,
+        ]}
+        castShadow={false}
+        receiveShadow={false}
+      />
+
+      <instancedMesh
+        ref={bladeThreeRef}
+        args={[
+          geometries.three,
+          materials.three,
+          wildGrass.length,
+        ]}
+        castShadow={false}
+        receiveShadow={false}
+      />
+
+      <instancedMesh
+        ref={bladeFourRef}
+        args={[
+          geometries.four,
+          materials.four,
+          wildGrass.length,
+        ]}
+        castShadow={false}
+        receiveShadow={false}
+      />
+    </>
   );
 }
 
 
 // =====================================================
-// FIELD BOUNDARY POST
+// INSTANCED BOUNDARY POSTS
 // =====================================================
 
-function BoundaryPost({
-  position = [0, 0, 0],
-  rotation = 0,
+function InstancedBoundaryPosts({
+  posts,
 }) {
+  const postRef = useRef(null);
+  const topRef = useRef(null);
+
+  const geometries = useMemo(
+    () => ({
+      post: new THREE.CylinderGeometry(
+        0.065,
+        0.085,
+        0.84,
+        7,
+      ),
+
+      top: new THREE.ConeGeometry(
+        0.09,
+        0.16,
+        7,
+      ),
+    }),
+    [],
+  );
+
+  const materials = useMemo(
+    () => ({
+      post: new THREE.MeshStandardMaterial({
+        color: "#755438",
+        roughness: 1,
+      }),
+
+      top: new THREE.MeshStandardMaterial({
+        color: "#66452f",
+        roughness: 1,
+      }),
+    }),
+    [],
+  );
+
+  useEffect(() => {
+    if (
+      !postRef.current ||
+      !topRef.current
+    ) {
+      return;
+    }
+
+    const dummy = new THREE.Object3D();
+
+    posts.forEach(
+      (position, index) => {
+        const rotation =
+          index * 0.17;
+
+        // ---------------------------------------------
+        // POST
+        // ---------------------------------------------
+
+        dummy.position.set(
+          position[0],
+          position[1] + 0.42,
+          position[2],
+        );
+
+        dummy.rotation.set(
+          0,
+          rotation,
+          0,
+        );
+
+        dummy.scale.set(1, 1, 1);
+
+        dummy.updateMatrix();
+
+        postRef.current.setMatrixAt(
+          index,
+          dummy.matrix,
+        );
+
+
+        // ---------------------------------------------
+        // TOP
+        // ---------------------------------------------
+
+        dummy.position.set(
+          position[0],
+          position[1] + 0.86,
+          position[2],
+        );
+
+        dummy.rotation.set(
+          0,
+          rotation,
+          0,
+        );
+
+        dummy.scale.set(1, 1, 1);
+
+        dummy.updateMatrix();
+
+        topRef.current.setMatrixAt(
+          index,
+          dummy.matrix,
+        );
+      },
+    );
+
+    postRef.current.instanceMatrix.needsUpdate =
+      true;
+
+    topRef.current.instanceMatrix.needsUpdate =
+      true;
+
+    postRef.current.computeBoundingSphere();
+    topRef.current.computeBoundingSphere();
+  }, [posts]);
+
   return (
-    <group
-      position={position}
-      rotation={[
-        0,
-        rotation,
-        0,
-      ]}
-    >
-      <mesh
-        position={[
-          0,
-          0.42,
-          0,
+    <>
+      <instancedMesh
+        ref={postRef}
+        args={[
+          geometries.post,
+          materials.post,
+          posts.length,
         ]}
-        castShadow
-        receiveShadow
-      >
-        <cylinderGeometry
-          args={[
-            0.065,
-            0.085,
-            0.84,
-            7,
-          ]}
-        />
+        castShadow={false}
+        receiveShadow={false}
+      />
 
-        <meshStandardMaterial
-          color="#755438"
-          roughness={1}
-        />
-      </mesh>
-
-
-      <mesh
-        position={[
-          0,
-          0.86,
-          0,
+      <instancedMesh
+        ref={topRef}
+        args={[
+          geometries.top,
+          materials.top,
+          posts.length,
         ]}
-        castShadow
-      >
-        <coneGeometry
-          args={[
-            0.09,
-            0.16,
-            7,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#66452f"
-          roughness={1}
-        />
-      </mesh>
-    </group>
+        castShadow={false}
+        receiveShadow={false}
+      />
+    </>
   );
 }
 
@@ -329,7 +633,7 @@ export default function FarmGroundDetails() {
       [-14.4, 0.05, -4],
       [14.2, 0.05, 3.5],
     ],
-    []
+    [],
   );
 
 
@@ -349,7 +653,7 @@ export default function FarmGroundDetails() {
       [3.2, 0.16, 7],
       [7.3, 0.16, 6.9],
     ],
-    []
+    [],
   );
 
 
@@ -385,12 +689,12 @@ export default function FarmGroundDetails() {
       [13.7, 0, 0],
       [13.4, 0, 6],
     ],
-    []
+    [],
   );
 
 
   // ===================================================
-  // FIELD POSTS
+  // BOUNDARY POSTS
   // ===================================================
 
   const posts = useMemo(
@@ -406,7 +710,7 @@ export default function FarmGroundDetails() {
       [12.7, 0, -3.3],
       [12.7, 0, 3.3],
     ],
-    []
+    [],
   );
 
 
@@ -417,88 +721,21 @@ export default function FarmGroundDetails() {
   return (
     <group>
 
-      {/* NATURAL STONES */}
+      <InstancedStones
+        stones={stones}
+      />
 
-      {stones.map(
-        (
-          position,
-          index
-        ) => (
-          <FarmStone
-            key={`stone-${index}`}
-            position={position}
-            scale={
-              0.75 +
-              (index % 4) * 0.13
-            }
-            rotation={
-              index * 0.72
-            }
-          />
-        )
-      )}
+      <InstancedSoilClumps
+        soilClumps={soilClumps}
+      />
 
+      <InstancedWildGrass
+        wildGrass={wildGrass}
+      />
 
-      {/* CULTIVATED SOIL CLUMPS */}
-
-      {soilClumps.map(
-        (
-          position,
-          index
-        ) => (
-          <SoilClump
-            key={`soil-${index}`}
-            position={position}
-            scale={
-              0.7 +
-              (index % 3) * 0.14
-            }
-            rotation={
-              index * 0.9
-            }
-          />
-        )
-      )}
-
-
-      {/* FIELD-EDGE GRASS */}
-
-      {wildGrass.map(
-        (
-          position,
-          index
-        ) => (
-          <WildGrassPatch
-            key={`wild-grass-${index}`}
-            position={position}
-            scale={
-              0.75 +
-              (index % 5) * 0.08
-            }
-            rotation={
-              index * 0.61
-            }
-          />
-        )
-      )}
-
-
-      {/* BOUNDARY POSTS */}
-
-      {posts.map(
-        (
-          position,
-          index
-        ) => (
-          <BoundaryPost
-            key={`post-${index}`}
-            position={position}
-            rotation={
-              index * 0.17
-            }
-          />
-        )
-      )}
+      <InstancedBoundaryPosts
+        posts={posts}
+      />
 
     </group>
   );

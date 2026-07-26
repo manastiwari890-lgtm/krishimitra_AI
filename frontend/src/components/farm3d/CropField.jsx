@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 
-import CropPlant from "./CropPlant";
-
+import InstancedCropField from "./InstancedCropField";
 
 // =====================================================
 // KRISHIMITRA AI
@@ -23,7 +22,6 @@ import CropPlant from "./CropPlant";
 // - Full InstancedMesh crop rendering
 // - Distance based LOD
 // =====================================================
-
 
 export default function CropField({
   position = [0, 0, 0],
@@ -47,155 +45,69 @@ export default function CropField({
 
   growth = 1,
 }) {
-
   // ===================================================
   // GENERATE PLANTS
   // ===================================================
 
   const plants = useMemo(() => {
-
     const generatedPlants = [];
 
-    const xSpacing =
-      width / plantsPerRow;
+    const xSpacing = width / plantsPerRow;
 
-    const zSpacing =
-      depth / rows;
+    const zSpacing = depth / rows;
 
-
-    for (
-      let row = 0;
-      row < rows;
-      row += 1
-    ) {
-
-      for (
-        let plant = 0;
-        plant < plantsPerRow;
-        plant += 1
-      ) {
-
+    for (let row = 0; row < rows; row += 1) {
+      for (let plant = 0; plant < plantsPerRow; plant += 1) {
         // =============================================
         // POSITION
         // =============================================
 
-        const x =
-          -width / 2 +
-          xSpacing / 2 +
-          plant * xSpacing;
+        const x = -width / 2 + xSpacing / 2 + plant * xSpacing;
 
-        const z =
-          -depth / 2 +
-          zSpacing / 2 +
-          row * zSpacing;
-
+        const z = -depth / 2 + zSpacing / 2 + row * zSpacing;
 
         // =============================================
         // DETERMINISTIC VARIATION
         // =============================================
 
-        const seed =
-          row * 12.9898 +
-          plant * 78.233;
+        const seed = row * 12.9898 + plant * 78.233;
 
-
-        const variation =
-          Math.sin(seed);
-
+        const variation = Math.sin(seed);
 
         // =============================================
         // SCALE
         // =============================================
 
-        const plantScale =
-          growth *
-          (
-            0.86 +
-            Math.abs(variation) *
-            0.16
-          );
-
+        const plantScale = growth * (0.86 + Math.abs(variation) * 0.16);
 
         // =============================================
         // ROTATION
         // =============================================
 
-        const rotation =
-          Math.sin(
-            seed * 1.37
-          ) * 0.22;
-
+        const rotation = Math.sin(seed * 1.37) * 0.22;
 
         generatedPlants.push({
+          id: `${row}-${plant}`,
 
-          id:
-            `${row}-${plant}`,
+          position: [x, 0.2, z],
 
-          position: [
-            x,
-            0.2,
-            z,
-          ],
-
-          scale:
-            plantScale,
+          scale: plantScale,
 
           rotation,
         });
       }
     }
 
-
     return generatedPlants;
-
-  }, [
-    width,
-    depth,
-    rows,
-    plantsPerRow,
-    growth,
-  ]);
-
+  }, [width, depth, rows, plantsPerRow, growth]);
 
   // ===================================================
   // RENDER
   // ===================================================
 
   return (
-    <group
-      position={
-        position
-      }
-    >
-
-      {plants.map(
-        (plant) => (
-
-          <CropPlant
-            key={
-              plant.id
-            }
-
-            position={
-              plant.position
-            }
-
-            scale={
-              plant.scale
-            }
-
-            rotation={
-              plant.rotation
-            }
-
-            health={
-              health
-            }
-          />
-
-        )
-      )}
-
+    <group position={position}>
+      <InstancedCropField plants={plants} health={health} />
     </group>
   );
 }
