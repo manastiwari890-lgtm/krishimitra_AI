@@ -1,6 +1,18 @@
 // =====================================================
 // KRISHIMITRA AI
-// CROP DISEASE KNOWLEDGE BASE - V1
+// CROP DISEASE KNOWLEDGE BASE - V2
+// Weather-aware disease intelligence
+// =====================================================
+//
+// IMPORTANT:
+//
+// weatherRisk describes weather conditions that may
+// increase concern for a disease/pest.
+//
+// It is NOT a diagnosis.
+// Disease diagnosis must still depend on crop symptoms,
+// image analysis and/or expert confirmation.
+//
 // =====================================================
 
 export const diseaseKnowledgeBase = {
@@ -32,6 +44,12 @@ export const diseaseKnowledgeBase = {
       "Use resistant hybrids where available.",
       "Manage infected crop residue after harvest.",
     ],
+
+    // No explicit weather association in current KB text.
+    weatherRisk: {
+      factors: [],
+      level: "low",
+    },
   },
 
 
@@ -57,6 +75,14 @@ export const diseaseKnowledgeBase = {
       "Regularly inspect young leaves during cool and humid weather.",
       "Maintain good overall crop health.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "coolConditions",
+        "highHumidity",
+      ],
+      level: "medium",
+    },
   },
 
 
@@ -85,6 +111,13 @@ export const diseaseKnowledgeBase = {
       "Manage infected corn residue after harvest.",
       "Monitor crops during prolonged periods of leaf moisture.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "wetConditions",
+      ],
+      level: "medium",
+    },
   },
 
 
@@ -138,6 +171,15 @@ export const diseaseKnowledgeBase = {
       "Improve spacing and airflow between plants.",
       "Rotate away from tomato and pepper crops.",
     ],
+
+    // Current KB repeatedly emphasizes wet foliage,
+    // therefore wet conditions are useful as a watch factor.
+    weatherRisk: {
+      factors: [
+        "wetConditions",
+      ],
+      level: "medium",
+    },
   },
 
 
@@ -191,6 +233,13 @@ export const diseaseKnowledgeBase = {
       "Avoid overhead irrigation where possible.",
       "Maintain healthy plant growth and balanced nutrition.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "wetConditions",
+      ],
+      level: "medium",
+    },
   },
 
 
@@ -220,6 +269,15 @@ export const diseaseKnowledgeBase = {
       "Monitor crops closely during cool and wet conditions.",
       "Use resistant varieties where available.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "coolConditions",
+        "wetConditions",
+        "highHumidity",
+      ],
+      level: "high",
+    },
   },
 
 
@@ -273,6 +331,13 @@ export const diseaseKnowledgeBase = {
       "Improve airflow around plants.",
       "Rotate away from tomato and pepper crops.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "wetConditions",
+      ],
+      level: "medium",
+    },
   },
 
 
@@ -302,6 +367,13 @@ export const diseaseKnowledgeBase = {
       "Rotate tomatoes and related crops.",
       "Remove infected plant debris after the season.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "wetConditions",
+      ],
+      level: "medium",
+    },
   },
 
 
@@ -332,6 +404,14 @@ export const diseaseKnowledgeBase = {
       "Provide adequate spacing and airflow.",
       "Rotate away from tomato, potato, pepper and eggplant.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "coolConditions",
+        "wetConditions",
+      ],
+      level: "high",
+    },
   },
 
 
@@ -361,6 +441,13 @@ export const diseaseKnowledgeBase = {
       "Avoid prolonged leaf wetness.",
       "Use resistant varieties where available.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "highHumidity",
+      ],
+      level: "high",
+    },
   },
 
 
@@ -390,6 +477,13 @@ export const diseaseKnowledgeBase = {
       "Rotate crops.",
       "Remove infected crop debris after harvest.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "wetConditions",
+      ],
+      level: "medium",
+    },
   },
 
 
@@ -418,6 +512,14 @@ export const diseaseKnowledgeBase = {
       "Avoid unnecessary plant stress.",
       "Monitor nearby plants because mites can spread between plants.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "hotConditions",
+        "dryConditions",
+      ],
+      level: "medium",
+    },
   },
 
 
@@ -445,6 +547,13 @@ export const diseaseKnowledgeBase = {
       "Remove infected plant debris.",
       "Rotate crops where appropriate.",
     ],
+
+    weatherRisk: {
+      factors: [
+        "wetConditions",
+      ],
+      level: "medium",
+    },
   },
 
 
@@ -473,6 +582,12 @@ export const diseaseKnowledgeBase = {
       "Monitor crops for whiteflies.",
       "Remove infected plants and susceptible weeds where appropriate.",
     ],
+
+    // Current KB does not define a direct weather trigger.
+    weatherRisk: {
+      factors: [],
+      level: "low",
+    },
   },
 
 
@@ -502,6 +617,11 @@ export const diseaseKnowledgeBase = {
       "Use resistant varieties where available.",
       "Maintain good hygiene when handling plants.",
     ],
+
+    weatherRisk: {
+      factors: [],
+      level: "low",
+    },
   },
 
 
@@ -529,6 +649,7 @@ export const diseaseKnowledgeBase = {
 
 // =====================================================
 // GET DISEASE INFORMATION
+// Existing ML lookup - KEEP THIS
 // =====================================================
 
 export function getDiseaseKnowledge(className) {
@@ -537,4 +658,72 @@ export function getDiseaseKnowledge(className) {
   }
 
   return diseaseKnowledgeBase[className] || null;
+}
+
+
+// =====================================================
+// GET WEATHER-SENSITIVE DISEASES FOR A CROP
+// =====================================================
+
+export function getWeatherSensitiveDiseases(cropName) {
+  if (!cropName) {
+    return [];
+  }
+
+  const normalizedCrop = String(cropName)
+    .trim()
+    .toLowerCase();
+
+  return Object.entries(diseaseKnowledgeBase)
+    .filter(([, item]) => {
+      if (item.healthy) {
+        return false;
+      }
+
+      if (
+        !item.weatherRisk ||
+        !Array.isArray(item.weatherRisk.factors) ||
+        item.weatherRisk.factors.length === 0
+      ) {
+        return false;
+      }
+
+      return (
+        String(item.crop)
+          .trim()
+          .toLowerCase() === normalizedCrop
+      );
+    })
+    .map(([className, item]) => ({
+      className,
+      ...item,
+    }));
+}
+
+
+// =====================================================
+// GET ALL DISEASES FOR A CROP
+// =====================================================
+
+export function getDiseasesForCrop(cropName) {
+  if (!cropName) {
+    return [];
+  }
+
+  const normalizedCrop = String(cropName)
+    .trim()
+    .toLowerCase();
+
+  return Object.entries(diseaseKnowledgeBase)
+    .filter(([, item]) => {
+      return (
+        String(item.crop)
+          .trim()
+          .toLowerCase() === normalizedCrop
+      );
+    })
+    .map(([className, item]) => ({
+      className,
+      ...item,
+    }));
 }

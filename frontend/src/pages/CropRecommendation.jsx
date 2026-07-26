@@ -20,6 +20,18 @@ function CropRecommendation() {
     moisture: "",
     soilType: "",
     season: "",
+
+    // Soil Intelligence V2 nutrient data
+    nitrogen: "",
+    phosphorus: "",
+    potassium: "",
+    npkUnit: "kg/ha",
+
+    nutrientStatus: {
+      nitrogen: null,
+      phosphorus: null,
+      potassium: null,
+    },
   });
 
   const [result, setResult] = useState(null);
@@ -88,12 +100,27 @@ function CropRecommendation() {
         ...previous,
 
         ph: report.ph ?? previous.ph,
-
         moisture: report.moisture ?? previous.moisture,
 
         soilType:
           normalizeSoilType(report.soilType || report.soilColor) ||
           previous.soilType,
+
+        nitrogen: report.nitrogen ?? previous.nitrogen,
+
+        phosphorus: report.phosphorus ?? previous.phosphorus,
+
+        potassium: report.potassium ?? previous.potassium,
+
+        npkUnit: report.npkUnit || previous.npkUnit || "kg/ha",
+
+        nutrientStatus: {
+          nitrogen: report.nutrientStatus?.nitrogen ?? null,
+
+          phosphorus: report.nutrientStatus?.phosphorus ?? null,
+
+          potassium: report.nutrientStatus?.potassium ?? null,
+        },
       }));
 
       setResult(null);
@@ -194,6 +221,13 @@ function CropRecommendation() {
         ph: farmData.ph,
         moisture: farmData.moisture,
         soilType: farmData.soilType,
+
+        nitrogen: farmData.nitrogen,
+        phosphorus: farmData.phosphorus,
+        potassium: farmData.potassium,
+        npkUnit: farmData.npkUnit,
+
+        nutrientStatus: farmData.nutrientStatus,
       },
 
       weather: {
@@ -214,6 +248,7 @@ function CropRecommendation() {
 
       limit: 5,
     });
+    console.log("🌱 KrishiMitra Recommendation Input:", recommendation.input);
 
     setResult(recommendation);
   };
@@ -229,6 +264,17 @@ function CropRecommendation() {
       moisture: "",
       soilType: "",
       season: "",
+
+      nitrogen: "",
+      phosphorus: "",
+      potassium: "",
+      npkUnit: "kg/ha",
+
+      nutrientStatus: {
+        nitrogen: null,
+        phosphorus: null,
+        potassium: null,
+      },
     });
 
     setResult(null);
@@ -573,6 +619,39 @@ function CropRecommendation() {
                 {language === "hi" ? "फसलों का विश्लेषण" : "crops analyzed"}
               </span>
             </div>
+            {result.dataConfidence && (
+              <div className="crop-data-confidence">
+                <div>
+                  <strong>
+                    🎯{" "}
+                    {language === "hi"
+                      ? "Recommendation Confidence"
+                      : "Recommendation Confidence"}
+                  </strong>
+
+                  <span>
+                    {result.dataConfidence.score}% —{" "}
+                    {result.dataConfidence.level === "high"
+                      ? language === "hi"
+                        ? "उच्च"
+                        : "High"
+                      : result.dataConfidence.level === "medium"
+                        ? language === "hi"
+                          ? "मध्यम"
+                          : "Medium"
+                        : language === "hi"
+                          ? "कम"
+                          : "Low"}
+                  </span>
+                </div>
+
+                <p>
+                  {language === "hi"
+                    ? `${result.dataConfidence.availableFields}/${result.dataConfidence.totalFields} महत्वपूर्ण data inputs उपलब्ध हैं।`
+                    : `${result.dataConfidence.availableFields}/${result.dataConfidence.totalFields} important data inputs are available.`}
+                </p>
+              </div>
+            )}
 
             {/* LIVE DATA USED */}
 
@@ -668,6 +747,53 @@ function CropRecommendation() {
                         </ul>
                       </div>
                     )}
+                    {/* =============================================
+    DISEASE WEATHER WATCH
+============================================= */}
+
+                    {Array.isArray(crop.diseaseWeatherRisks) &&
+                      crop.diseaseWeatherRisks.length > 0 && (
+                        <div className="crop-disease-weather-watch">
+                          <div className="crop-disease-watch-heading">
+                            <strong>
+                              🦠{" "}
+                              {language === "hi"
+                                ? "Disease Weather Watch"
+                                : "Disease Weather Watch"}
+                            </strong>
+
+                            <span>
+                              {language === "hi"
+                                ? "मौसम आधारित"
+                                : "Weather-based"}
+                            </span>
+                          </div>
+
+                          <p className="crop-disease-watch-note">
+                            {language === "hi"
+                              ? "मौजूदा मौसम कुछ रोगों के लिए अनुकूल परिस्थितियाँ बना सकता है। यह रोग की पुष्टि नहीं है।"
+                              : "Current weather may create favorable conditions for some diseases. This is not a disease diagnosis."}
+                          </p>
+
+                          <ul>
+                            {crop.diseaseWeatherRisks.map((risk, riskIndex) => (
+                              <li key={`${risk.disease}-${riskIndex}`}>
+                                <strong>{risk.disease}</strong>
+
+                                <span>
+                                  {risk.level === "high"
+                                    ? language === "hi"
+                                      ? "उच्च मौसम जोखिम"
+                                      : "High weather risk"
+                                    : language === "hi"
+                                      ? "मौसम निगरानी"
+                                      : "Weather watch"}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                   </div>
                 </article>
               ))}

@@ -1,4 +1,5 @@
 import { cropKnowledgeBase } from "../data/cropKnowledgeBase";
+import { getWeatherSensitiveDiseases } from "../data/diseaseKnowledgeBase";
 
 // =====================================================
 // KRISHIMITRA AI
@@ -10,19 +11,13 @@ import { cropKnowledgeBase } from "../data/cropKnowledgeBase";
 // =====================================================
 
 function numberOrNull(value) {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
+  if (value === null || value === undefined || value === "") {
     return null;
   }
 
   const number = Number(value);
 
-  return Number.isFinite(number)
-    ? number
-    : null;
+  return Number.isFinite(number) ? number : null;
 }
 
 // =====================================================
@@ -37,25 +32,61 @@ function scoreRange(value, range) {
     };
   }
 
-  if (
-    value >= range.idealMin &&
-    value <= range.idealMax
-  ) {
+  const { min, idealMin, idealMax, max } = range;
+
+  // Exact centre of the ideal range
+  const idealCenter = (idealMin + idealMax) / 2;
+
+  // ---------------------------------------------------
+  // INSIDE IDEAL RANGE
+  // 90 → 100 depending on distance from ideal centre
+  // ---------------------------------------------------
+
+  if (value >= idealMin && value <= idealMax) {
+    const halfIdealRange = (idealMax - idealMin) / 2;
+
+    const distanceFromCenter = Math.abs(value - idealCenter);
+
+    const closeness =
+      halfIdealRange > 0 ? 1 - distanceFromCenter / halfIdealRange : 1;
+
+    const score = Math.round(90 + closeness * 10);
+
     return {
-      score: 100,
+      score,
       status: "ideal",
     };
   }
 
-  if (
-    value >= range.min &&
-    value <= range.max
-  ) {
+  // ---------------------------------------------------
+  // ACCEPTABLE RANGE
+  // Gradually falls from 90 → 60
+  // ---------------------------------------------------
+
+  if (value >= min && value <= max) {
+    let closeness = 0;
+
+    if (value < idealMin) {
+      const span = idealMin - min;
+
+      closeness = span > 0 ? (value - min) / span : 1;
+    } else {
+      const span = max - idealMax;
+
+      closeness = span > 0 ? (max - value) / span : 1;
+    }
+
+    const score = Math.round(60 + closeness * 30);
+
     return {
-      score: 70,
+      score,
       status: "acceptable",
     };
   }
+
+  // ---------------------------------------------------
+  // OUTSIDE SUPPORTED RANGE
+  // ---------------------------------------------------
 
   return {
     score: 25,
@@ -67,10 +98,7 @@ function scoreRange(value, range) {
 // SOIL TYPE SCORING
 // =====================================================
 
-function scoreSoilType(
-  soilType,
-  suitableSoils
-) {
+function scoreSoilType(soilType, suitableSoils) {
   if (!soilType) {
     return {
       score: null,
@@ -78,27 +106,18 @@ function scoreSoilType(
     };
   }
 
-  if (
-    !Array.isArray(suitableSoils) ||
-    suitableSoils.length === 0
-  ) {
+  if (!Array.isArray(suitableSoils) || suitableSoils.length === 0) {
     return {
       score: null,
       status: "unknown",
     };
   }
 
-  const normalized =
-    String(soilType)
-      .trim()
-      .toLowerCase();
+  const normalized = String(soilType).trim().toLowerCase();
 
-  const suitable =
-    suitableSoils.some((soil) =>
-      normalized.includes(
-        String(soil).toLowerCase()
-      )
-    );
+  const suitable = suitableSoils.some((soil) =>
+    normalized.includes(String(soil).toLowerCase()),
+  );
 
   return suitable
     ? {
@@ -115,10 +134,7 @@ function scoreSoilType(
 // SEASON SCORING
 // =====================================================
 
-function scoreSeason(
-  season,
-  cropSeasons
-) {
+function scoreSeason(season, cropSeasons) {
   if (!season) {
     return {
       score: null,
@@ -126,28 +142,18 @@ function scoreSeason(
     };
   }
 
-  if (
-    !Array.isArray(cropSeasons) ||
-    cropSeasons.length === 0
-  ) {
+  if (!Array.isArray(cropSeasons) || cropSeasons.length === 0) {
     return {
       score: null,
       status: "unknown",
     };
   }
 
-  const normalizedSeason =
-    String(season)
-      .trim()
-      .toLowerCase();
+  const normalizedSeason = String(season).trim().toLowerCase();
 
-  const suitable =
-    cropSeasons.some(
-      (cropSeason) =>
-        String(cropSeason)
-          .toLowerCase() ===
-        normalizedSeason
-    );
+  const suitable = cropSeasons.some(
+    (cropSeason) => String(cropSeason).toLowerCase() === normalizedSeason,
+  );
 
   return suitable
     ? {
@@ -164,23 +170,15 @@ function scoreSeason(
 // WEIGHTED SCORE
 // =====================================================
 
-function calculateWeightedScore(
-  factors
-) {
+function calculateWeightedScore(factors) {
   let totalScore = 0;
   let totalWeight = 0;
 
   factors.forEach((factor) => {
-    if (
-      factor.score !== null &&
-      factor.score !== undefined
-    ) {
-      totalScore +=
-        factor.score *
-        factor.weight;
+    if (factor.score !== null && factor.score !== undefined) {
+      totalScore += factor.score * factor.weight;
 
-      totalWeight +=
-        factor.weight;
+      totalWeight += factor.weight;
     }
   });
 
@@ -188,9 +186,7 @@ function calculateWeightedScore(
     return null;
   }
 
-  return Math.round(
-    totalScore / totalWeight
-  );
+  return Math.round(totalScore / totalWeight);
 }
 
 // =====================================================
@@ -221,37 +217,24 @@ function getSuitability(score) {
 // LIVE WEATHER CONTEXT
 // =====================================================
 
-function analyzeLiveWeather({
-  humidity,
-  precipitation,
-  rain,
-}) {
+function analyzeLiveWeather({ humidity, precipitation, rain }) {
   const observations = [];
 
-  if (
-    humidity !== null &&
-    humidity >= 85
-  ) {
+  if (humidity !== null && humidity >= 85) {
     observations.push({
       type: "high-humidity",
       severity: "medium",
     });
   }
 
-  if (
-    precipitation !== null &&
-    precipitation >= 5
-  ) {
+  if (precipitation !== null && precipitation >= 5) {
     observations.push({
       type: "active-precipitation",
       severity: "medium",
     });
   }
 
-  if (
-    rain !== null &&
-    rain >= 10
-  ) {
+  if (rain !== null && rain >= 10) {
     observations.push({
       type: "heavy-rain",
       severity: "high",
@@ -259,6 +242,158 @@ function analyzeLiveWeather({
   }
 
   return observations;
+}
+// =====================================================
+// DISEASE WEATHER INTELLIGENCE
+// =====================================================
+
+// Crop recommendation database names do not always
+// exactly match disease-model crop names.
+const DISEASE_CROP_NAME_MAP = {
+  maize: "Corn (Maize)",
+  potato: "Potato",
+  tomato: "Tomato",
+  "bell pepper": "Bell Pepper",
+  bellpepper: "Bell Pepper",
+  pepper: "Bell Pepper",
+};
+
+// =====================================================
+// CONVERT LIVE WEATHER INTO DISEASE-RISK FACTORS
+// =====================================================
+
+function getCurrentWeatherFactors({
+  temperature,
+  humidity,
+  precipitation,
+  rain,
+}) {
+  const factors = new Set();
+
+  // High relative humidity
+  if (humidity !== null && humidity >= 85) {
+    factors.add("highHumidity");
+  }
+
+  // Current wet/rainy conditions
+  if (
+    (precipitation !== null && precipitation > 0) ||
+    (rain !== null && rain > 0)
+  ) {
+    factors.add("wetConditions");
+  }
+
+  // Broad weather-watch thresholds.
+  // These indicate conditions only; they do not
+  // diagnose a disease.
+  if (temperature !== null && temperature >= 30) {
+    factors.add("hotConditions");
+  }
+
+  if (temperature !== null && temperature <= 20) {
+    factors.add("coolConditions");
+  }
+
+  // Dry-condition watch.
+  // We only infer this when no rain/precipitation is
+  // recorded and humidity is relatively low.
+  if (
+    humidity !== null &&
+    humidity <= 40 &&
+    (precipitation === null || precipitation === 0) &&
+    (rain === null || rain === 0)
+  ) {
+    factors.add("dryConditions");
+  }
+
+  return Array.from(factors);
+}
+
+// =====================================================
+// MAP RECOMMENDATION CROP → DISEASE DATABASE CROP
+// =====================================================
+
+function getDiseaseCropName(crop) {
+  if (!crop) {
+    return null;
+  }
+
+  const candidates = [crop.id, crop.name?.en];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+
+    const normalized = String(candidate).trim().toLowerCase();
+
+    if (DISEASE_CROP_NAME_MAP[normalized]) {
+      return DISEASE_CROP_NAME_MAP[normalized];
+    }
+  }
+
+  return null;
+}
+
+// =====================================================
+// FIND WEATHER-SENSITIVE DISEASE WATCHES
+// =====================================================
+
+function getCropDiseaseWeatherRisks({ crop, activeWeatherFactors }) {
+  const diseaseCropName = getDiseaseCropName(crop);
+
+  if (!diseaseCropName) {
+    return [];
+  }
+
+  const diseases = getWeatherSensitiveDiseases(diseaseCropName);
+
+  if (!Array.isArray(diseases)) {
+    return [];
+  }
+
+  return diseases
+    .map((disease) => {
+      const requiredFactors = disease.weatherRisk?.factors || [];
+
+      const matchedFactors = requiredFactors.filter((factor) =>
+        activeWeatherFactors.includes(factor),
+      );
+
+      if (matchedFactors.length === 0) {
+        return null;
+      }
+
+      /*
+       * For multi-factor disease profiles, require all
+       * listed factors before raising a watch.
+       *
+       * Example:
+       * Late Blight:
+       * ["coolConditions", "wetConditions"]
+       *
+       * Both should be present.
+       *
+       * For a single-factor profile such as Leaf Mold:
+       * ["highHumidity"]
+       *
+       * that one factor is sufficient.
+       */
+      const allFactorsMatched = requiredFactors.every((factor) =>
+        activeWeatherFactors.includes(factor),
+      );
+
+      if (requiredFactors.length > 1 && !allFactorsMatched) {
+        return null;
+      }
+
+      return {
+        disease: disease.disease,
+        level: disease.weatherRisk?.level || "medium",
+
+        matchedFactors,
+        requiredFactors,
+      };
+    })
+    .filter(Boolean);
 }
 
 // =====================================================
@@ -278,14 +413,11 @@ function buildReasons({
 }) {
   const reasons = [];
 
-  if (
-    temperatureResult.status ===
-    "ideal"
-  ) {
+  if (temperatureResult.status === "ideal") {
     reasons.push(
       language === "hi"
         ? "मौजूदा तापमान इस फसल की ideal range में है।"
-        : "Current temperature is within the crop's ideal range."
+        : "Current temperature is within the crop's ideal range.",
     );
   }
 
@@ -293,62 +425,47 @@ function buildReasons({
     reasons.push(
       language === "hi"
         ? "मिट्टी का pH इस फसल के लिए अनुकूल है।"
-        : "Soil pH is favorable for this crop."
+        : "Soil pH is favorable for this crop.",
     );
   }
 
-  if (
-    moistureResult.status ===
-    "ideal"
-  ) {
+  if (moistureResult.status === "ideal") {
     reasons.push(
       language === "hi"
         ? "मिट्टी की नमी इस फसल की आवश्यकता के अनुकूल है।"
-        : "Soil moisture matches this crop's preferred range."
+        : "Soil moisture matches this crop's preferred range.",
     );
   }
 
-  if (
-    soilResult.status === "ideal"
-  ) {
+  if (soilResult.status === "ideal") {
     reasons.push(
       language === "hi"
         ? "मिट्टी का प्रकार इस फसल के लिए उपयुक्त है।"
-        : "The soil type is suitable for this crop."
+        : "The soil type is suitable for this crop.",
     );
   }
 
-  if (
-    seasonResult.status ===
-    "ideal"
-  ) {
+  if (seasonResult.status === "ideal") {
     reasons.push(
       language === "hi"
         ? "चुना गया season इस फसल के लिए उपयुक्त है।"
-        : "The selected season is suitable for this crop."
+        : "The selected season is suitable for this crop.",
     );
   }
 
-  if (
-    humidity !== null &&
-    humidity >= 40 &&
-    humidity <= 80
-  ) {
+  if (humidity !== null && humidity >= 40 && humidity <= 80) {
     reasons.push(
       language === "hi"
         ? "वर्तमान humidity अत्यधिक नहीं है।"
-        : "Current humidity is not at an extreme level."
+        : "Current humidity is not at an extreme level.",
     );
   }
 
-  if (
-    precipitation !== null &&
-    precipitation === 0
-  ) {
+  if (precipitation !== null && precipitation === 0) {
     reasons.push(
       language === "hi"
         ? "इस समय सक्रिय वर्षा दर्ज नहीं हुई है।"
-        : "No active precipitation is currently recorded."
+        : "No active precipitation is currently recorded.",
     );
   }
 
@@ -356,7 +473,7 @@ function buildReasons({
     reasons.push(
       language === "hi"
         ? `${crop.name.hi} के लिए उपलब्ध data में कोई strong ideal match नहीं मिला।`
-        : `No strong ideal match was identified for ${crop.name.en} from the available data.`
+        : `No strong ideal match was identified for ${crop.name.en} from the available data.`,
     );
   }
 
@@ -381,14 +498,11 @@ function buildRisks({
 }) {
   const risks = [];
 
-  if (
-    temperatureResult.status ===
-    "poor"
-  ) {
+  if (temperatureResult.status === "poor") {
     risks.push(
       language === "hi"
         ? "तापमान इस फसल की उपयुक्त range से बाहर है।"
-        : "Temperature is outside the crop's preferred range."
+        : "Temperature is outside the crop's preferred range.",
     );
   }
 
@@ -396,54 +510,31 @@ function buildRisks({
     risks.push(
       language === "hi"
         ? "मिट्टी का pH इस फसल की उपयुक्त range से बाहर है।"
-        : "Soil pH is outside the crop's suitable range."
+        : "Soil pH is outside the crop's suitable range.",
     );
   }
 
-  if (
-    moistureResult.status ===
-    "poor"
-  ) {
+  if (moistureResult.status === "poor") {
     risks.push(
       language === "hi"
         ? "मौजूदा soil moisture इस फसल की आवश्यकता से मेल नहीं खाती।"
-        : "Current soil moisture does not match the crop requirement."
+        : "Current soil moisture does not match the crop requirement.",
     );
   }
 
-  if (
-    soilResult.status ===
-    "less-suitable"
-  ) {
+  if (soilResult.status === "less-suitable") {
     risks.push(
       language === "hi"
         ? "मिट्टी का प्रकार इस फसल की preferred soil list में नहीं है।"
-        : "The soil type is not among this crop's preferred soils."
+        : "The soil type is not among this crop's preferred soils.",
     );
   }
 
-  if (
-    seasonResult.status === "poor"
-  ) {
+  if (seasonResult.status === "poor") {
     risks.push(
       language === "hi"
         ? "चुना गया season इस फसल का मुख्य growing season नहीं है।"
-        : "The selected season is not a primary growing season for this crop."
-    );
-  }
-
-  // ===================================================
-  // HUMIDITY RISK
-  // ===================================================
-
-  if (
-    humidity !== null &&
-    humidity >= 85
-  ) {
-    risks.push(
-      language === "hi"
-        ? "बहुत अधिक humidity fungal disease का जोखिम बढ़ा सकती है।"
-        : "Very high humidity may increase fungal disease risk."
+        : "The selected season is not a primary growing season for this crop.",
     );
   }
 
@@ -451,14 +542,11 @@ function buildRisks({
   // ACTIVE PRECIPITATION
   // ===================================================
 
-  if (
-    precipitation !== null &&
-    precipitation >= 5
-  ) {
+  if (precipitation !== null && precipitation >= 5) {
     risks.push(
       language === "hi"
         ? "वर्तमान precipitation अधिक है। सिंचाई या fertilizer application से पहले मौसम देखें।"
-        : "Current precipitation is elevated. Check conditions before irrigation or fertilizer application."
+        : "Current precipitation is elevated. Check conditions before irrigation or fertilizer application.",
     );
   }
 
@@ -466,14 +554,11 @@ function buildRisks({
   // HEAVY RAIN
   // ===================================================
 
-  if (
-    rain !== null &&
-    rain >= 10
-  ) {
+  if (rain !== null && rain >= 10) {
     risks.push(
       language === "hi"
         ? "भारी वर्षा की स्थिति में waterlogging और nutrient loss का जोखिम हो सकता है।"
-        : "Heavy rain may increase waterlogging and nutrient-loss risk."
+        : "Heavy rain may increase waterlogging and nutrient-loss risk.",
     );
   }
 
@@ -482,17 +567,15 @@ function buildRisks({
   // ===================================================
 
   if (
-    crop.waterRequirement ===
-      "low" &&
-    moistureResult.status ===
-      "poor" &&
+    crop.waterRequirement === "low" &&
+    moistureResult.status === "poor" &&
     rain !== null &&
     rain > 0
   ) {
     risks.push(
       language === "hi"
         ? "यह कम पानी वाली फसल है; अधिक soil moisture और बारिश drainage समस्या पैदा कर सकती है।"
-        : "This is a low-water crop; excessive soil moisture combined with rain may create drainage problems."
+        : "This is a low-water crop; excessive soil moisture combined with rain may create drainage problems.",
     );
   }
 
@@ -515,13 +598,11 @@ function buildActions({
 }) {
   const actions = [];
 
-  if (
-    moistureResult.status === "poor"
-  ) {
+  if (moistureResult.status === "poor") {
     actions.push(
       language === "hi"
         ? "बुवाई से पहले soil moisture की स्थिति जाँचें और आवश्यकता के अनुसार irrigation/drainage plan बनाएं।"
-        : "Check soil moisture before sowing and plan irrigation or drainage accordingly."
+        : "Check soil moisture before sowing and plan irrigation or drainage accordingly.",
     );
   }
 
@@ -529,53 +610,42 @@ function buildActions({
     actions.push(
       language === "hi"
         ? "फसल लगाने से पहले soil test के आधार पर pH correction की सलाह लें।"
-        : "Consider soil-test-based pH correction before planting."
+        : "Consider soil-test-based pH correction before planting.",
     );
   }
 
-  if (
-    temperatureResult.status ===
-    "poor"
-  ) {
+  if (temperatureResult.status === "poor") {
     actions.push(
       language === "hi"
         ? "तापमान अनुकूल होने तक sowing timing पर दोबारा विचार करें।"
-        : "Reconsider sowing timing until temperature conditions become more suitable."
+        : "Reconsider sowing timing until temperature conditions become more suitable.",
     );
   }
 
-  if (
-    humidity !== null &&
-    humidity >= 85
-  ) {
+  if (humidity !== null && humidity >= 85) {
     actions.push(
       language === "hi"
         ? "फसल में fungal symptoms की नियमित निगरानी करें।"
-        : "Monitor the crop regularly for fungal symptoms."
+        : "Monitor the crop regularly for fungal symptoms.",
     );
   }
 
   if (
-    (precipitation !== null &&
-      precipitation >= 5) ||
-    (rain !== null &&
-      rain >= 10)
+    (precipitation !== null && precipitation >= 5) ||
+    (rain !== null && rain >= 10)
   ) {
     actions.push(
       language === "hi"
         ? "बारिश के दौरान अनावश्यक irrigation और fertilizer application से बचें।"
-        : "Avoid unnecessary irrigation and fertilizer application during significant rain."
+        : "Avoid unnecessary irrigation and fertilizer application during significant rain.",
     );
   }
 
-  if (
-    crop.waterRequirement ===
-    "high"
-  ) {
+  if (crop.waterRequirement === "high") {
     actions.push(
       language === "hi"
         ? "इस फसल के लिए पर्याप्त और नियमित water availability सुनिश्चित करें।"
-        : "Ensure adequate and reliable water availability for this crop."
+        : "Ensure adequate and reliable water availability for this crop.",
     );
   }
 
@@ -583,13 +653,58 @@ function buildActions({
     actions.push(
       language === "hi"
         ? "वर्तमान conditions अनुकूल दिख रही हैं। स्थानीय कृषि सलाह के अनुसार sowing plan करें।"
-        : "Current conditions appear suitable. Plan sowing according to local agricultural guidance."
+        : "Current conditions appear suitable. Plan sowing according to local agricultural guidance.",
     );
   }
 
   return actions;
 }
+// =====================================================
+// DATA CONFIDENCE
+// =====================================================
 
+function calculateDataConfidence({
+  temperature,
+  ph,
+  moisture,
+  soilType,
+  season,
+  nitrogen,
+  phosphorus,
+  potassium,
+}) {
+  const fields = [
+    temperature,
+    ph,
+    moisture,
+    soilType,
+    season,
+    nitrogen,
+    phosphorus,
+    potassium,
+  ];
+
+  const availableFields = fields.filter(
+    (value) => value !== null && value !== undefined && value !== "",
+  ).length;
+
+  const score = Math.round((availableFields / fields.length) * 100);
+
+  let level = "low";
+
+  if (score >= 85) {
+    level = "high";
+  } else if (score >= 60) {
+    level = "medium";
+  }
+
+  return {
+    score,
+    level,
+    availableFields,
+    totalFields: fields.length,
+  };
+}
 // =====================================================
 // MAIN CROP RECOMMENDATION ENGINE
 // =====================================================
@@ -605,295 +720,253 @@ export function recommendCrops({
   // NORMALIZE INPUT
   // ===================================================
 
-  const temperature =
-    numberOrNull(
-      weather.temperature
-    );
+  const temperature = numberOrNull(weather.temperature);
 
-  const humidity =
-    numberOrNull(
-      weather.humidity
-    );
+  const humidity = numberOrNull(weather.humidity);
 
-  const precipitation =
-    numberOrNull(
-      weather.precipitation
-    );
+  const precipitation = numberOrNull(weather.precipitation);
 
-  const rain =
-    numberOrNull(
-      weather.rain
-    );
+  const rain = numberOrNull(weather.rain);
 
-  const ph =
-    numberOrNull(
-      soil.ph
-    );
+  const ph = numberOrNull(soil.ph);
 
-  const moisture =
-    numberOrNull(
-      soil.moisture
-    );
+  const moisture = numberOrNull(soil.moisture);
 
-  const soilType =
-    soil.soilType ||
-    soil.soilColor ||
-    null;
+  const soilType = soil.soilType || soil.soilColor || null;
+  const nitrogen = numberOrNull(soil.nitrogen);
+
+  const phosphorus = numberOrNull(soil.phosphorus);
+
+  const potassium = numberOrNull(soil.potassium);
+
+  const npkUnit = soil.npkUnit || "kg/ha";
+  const dataConfidence = calculateDataConfidence({
+    temperature,
+    ph,
+    moisture,
+    soilType,
+    season,
+    nitrogen,
+    phosphorus,
+    potassium,
+  });
 
   // ===================================================
   // LIVE WEATHER OBSERVATIONS
   // ===================================================
 
-  const weatherObservations =
-    analyzeLiveWeather({
-      humidity,
-      precipitation,
-      rain,
-    });
+  const weatherObservations = analyzeLiveWeather({
+    humidity,
+    precipitation,
+    rain,
+  });
+  const activeWeatherFactors = getCurrentWeatherFactors({
+    temperature,
+    humidity,
+    precipitation,
+    rain,
+  });
 
   // ===================================================
   // ANALYZE EVERY CROP
   // ===================================================
 
-  const recommendations =
-    cropKnowledgeBase.map(
-      (crop) => {
+  const recommendations = cropKnowledgeBase.map((crop) => {
+    // TEMPERATURE
 
-        // TEMPERATURE
+    const temperatureResult = scoreRange(temperature, crop.temperature);
 
-        const temperatureResult =
-          scoreRange(
-            temperature,
-            crop.temperature
-          );
+    // SOIL PH
 
-        // SOIL PH
+    const phResult = scoreRange(ph, crop.soilPh);
 
-        const phResult =
-          scoreRange(
-            ph,
-            crop.soilPh
-          );
+    // SOIL MOISTURE
 
-        // SOIL MOISTURE
+    const moistureResult = scoreRange(moisture, crop.moisture);
 
-        const moistureResult =
-          scoreRange(
-            moisture,
-            crop.moisture
-          );
+    // SOIL TYPE
 
-        // SOIL TYPE
+    const soilResult = scoreSoilType(soilType, crop.suitableSoils);
 
-        const soilResult =
-          scoreSoilType(
-            soilType,
-            crop.suitableSoils
-          );
+    // SEASON
 
-        // SEASON
+    const seasonResult = scoreSeason(season, crop.seasons);
 
-        const seasonResult =
-          scoreSeason(
-            season,
-            crop.seasons
-          );
+    // =================================================
+    // WEIGHTED AGRONOMIC SCORE
+    // =================================================
 
-        // =================================================
-        // WEIGHTED AGRONOMIC SCORE
-        // =================================================
+    const factors = [
+      {
+        name: "temperature",
+        score: temperatureResult.score,
+        weight: 0.25,
+      },
 
-        const factors = [
-          {
-            name: "temperature",
-            score:
-              temperatureResult.score,
-            weight: 0.25,
-          },
+      {
+        name: "ph",
+        score: phResult.score,
+        weight: 0.25,
+      },
 
-          {
-            name: "ph",
-            score:
-              phResult.score,
-            weight: 0.25,
-          },
+      {
+        name: "moisture",
+        score: moistureResult.score,
+        weight: 0.2,
+      },
 
-          {
-            name: "moisture",
-            score:
-              moistureResult.score,
-            weight: 0.2,
-          },
+      {
+        name: "soil",
+        score: soilResult.score,
+        weight: 0.15,
+      },
 
-          {
-            name: "soil",
-            score:
-              soilResult.score,
-            weight: 0.15,
-          },
+      {
+        name: "season",
+        score: seasonResult.score,
+        weight: 0.15,
+      },
+    ];
 
-          {
-            name: "season",
-            score:
-              seasonResult.score,
-            weight: 0.15,
-          },
-        ];
+    const score = calculateWeightedScore(factors);
+    // =================================================
+    // WEATHER-BASED DISEASE WATCH
+    // Does NOT affect crop suitability score
+    // =================================================
 
-        const score =
-          calculateWeightedScore(
-            factors
-          );
+    const diseaseWeatherRisks = getCropDiseaseWeatherRisks({
+      crop,
+      activeWeatherFactors,
+    });
 
-        // =================================================
-        // EXPLANATIONS
-        // =================================================
+    // =================================================
+    // EXPLANATIONS
+    // =================================================
 
-        const reasons =
-          buildReasons({
-            crop,
-            temperatureResult,
-            phResult,
-            moistureResult,
-            soilResult,
-            seasonResult,
-            humidity,
-            precipitation,
-            language,
-          });
+    const reasons = buildReasons({
+      crop,
+      temperatureResult,
+      phResult,
+      moistureResult,
+      soilResult,
+      seasonResult,
+      humidity,
+      precipitation,
+      language,
+    });
 
-        const risks =
-          buildRisks({
-            crop,
-            temperatureResult,
-            phResult,
-            moistureResult,
-            soilResult,
-            seasonResult,
-            humidity,
-            precipitation,
-            rain,
-            language,
-          });
+    const risks = buildRisks({
+      crop,
+      temperatureResult,
+      phResult,
+      moistureResult,
+      soilResult,
+      seasonResult,
+      humidity,
+      precipitation,
+      rain,
+      language,
+    });
 
-        const actions =
-          buildActions({
-            crop,
-            temperatureResult,
-            phResult,
-            moistureResult,
-            humidity,
-            precipitation,
-            rain,
-            language,
-          });
+    const actions = buildActions({
+      crop,
+      temperatureResult,
+      phResult,
+      moistureResult,
+      humidity,
+      precipitation,
+      rain,
+      language,
+    });
 
-        // =================================================
-        // RESULT FOR THIS CROP
-        // =================================================
+    // =================================================
+    // RESULT FOR THIS CROP
+    // =================================================
 
-        return {
-          id: crop.id,
+    return {
+      id: crop.id,
 
-          name:
-            language === "hi"
-              ? crop.name.hi
-              : crop.name.en,
+      name: language === "hi" ? crop.name.hi : crop.name.en,
 
-          englishName:
-            crop.name.en,
+      englishName: crop.name.en,
 
-          icon:
-            crop.icon,
+      icon: crop.icon,
 
-          category:
-            crop.category,
+      category: crop.category,
 
-          score,
+      score,
 
-          suitability:
-            getSuitability(score),
+      suitability: getSuitability(score),
 
-          waterRequirement:
-            crop.waterRequirement,
+      waterRequirement: crop.waterRequirement,
 
-          seasons:
-            crop.seasons,
+      seasons: crop.seasons,
 
-          factors: {
-            temperature:
-              temperatureResult,
+      factors: {
+        temperature: temperatureResult,
 
-            ph:
-              phResult,
+        ph: phResult,
 
-            moisture:
-              moistureResult,
+        moisture: moistureResult,
 
-            soil:
-              soilResult,
+        soil: soilResult,
 
-            season:
-              seasonResult,
-          },
+        season: seasonResult,
+      },
 
-          liveWeather: {
-            humidity,
-            precipitation,
-            rain,
-          },
+      liveWeather: {
+        humidity,
+        precipitation,
+        rain,
+      },
 
-          reasons,
+      reasons,
 
-          risks,
+      risks,
 
-          actions,
-        };
-      }
-    );
+      diseaseWeatherRisks,
+
+      actions,
+    };
+  });
 
   // ===================================================
   // RANK BEST → WORST
   // ===================================================
 
-  recommendations.sort(
-    (a, b) =>
-      (b.score ?? 0) -
-      (a.score ?? 0)
-  );
+  recommendations.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
 
   // ===================================================
   // FINAL RESPONSE
   // ===================================================
 
   return {
-    recommendations:
-      recommendations.slice(
-        0,
-        limit
-      ),
+    recommendations: recommendations.slice(0, limit),
 
-    bestCrop:
-      recommendations[0] ||
-      null,
+    bestCrop: recommendations[0] || null,
 
-    analyzedCrops:
-      recommendations.length,
+    analyzedCrops: recommendations.length,
 
     weatherObservations,
+    dataConfidence,
+    activeWeatherFactors,
 
     input: {
       temperature,
       humidity,
       precipitation,
       rain,
+
       ph,
       moisture,
       soilType,
       season,
-    },
 
-    generatedAt:
-      new Date().toISOString(),
+      nitrogen,
+      phosphorus,
+      potassium,
+      npkUnit,
+    },
+    generatedAt: new Date().toISOString(),
   };
 }

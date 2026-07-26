@@ -1,0 +1,31 @@
+/* =====================================================
+   KRISHIMITRA AI - ADVANCED SOIL REPORT
+   ===================================================== */
+
+.advanced-report-values {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.advanced-report-values > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.advanced-report-values span {
+  display: inline-block;
+}
+
+.advanced-report-values strong {
+  display: inline-block;
+  font-weight: 700;
+}
+
+.advanced-report-values small {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import SoilCardScanner from "./SoilCardScanner";
 import { analyzeSoilData } from "../services/soilService";
+import "./AdvancedSoilTest.css";
 
 // =====================================================
 // KRISHIMITRA AI

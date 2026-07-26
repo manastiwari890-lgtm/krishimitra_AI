@@ -7,10 +7,16 @@ import {
   Link,
 } from "react-router-dom";
 
-import Weather from "./pages/weather";
+import Weather from "./pages/Weather";
 import CropRecommendation from "./pages/CropRecommendation";
 import DiseaseDetection from "./pages/DiseaseDetection";
 import SoilFertility from "./pages/SoilFertility";
+import Farm3D from "./pages/Farm3D";
+
+// =====================================================
+// KRISHIMITRA AI
+// HOME PAGE
+// =====================================================
 
 function Home() {
   return (
@@ -49,9 +55,12 @@ function Home() {
             Disease AI
           </Link>
 
-          {/* NEW SOIL FERTILITY LINK */}
           <Link to="/soil">
             Soil Test
+          </Link>
+
+          <Link to="/farm">
+            3D Farm
           </Link>
 
           <a href="#about">
@@ -113,22 +122,23 @@ function Home() {
           <p className="hero-description">
             Your intelligent farming companion that helps you make
             better decisions with real-time weather insights,
-            AI-powered crop recommendations, soil fertility analysis
-            and intelligent crop disease detection.
+            AI-powered crop recommendations, soil fertility analysis,
+            intelligent crop disease detection and interactive
+            3D farm intelligence.
           </p>
 
 
           <div className="hero-buttons">
 
-            <button className="primary-btn">
+            <a href="#features" className="primary-btn">
               Get Started
               <span>→</span>
-            </button>
+            </a>
 
-            <button className="explore-btn">
+            <a href="#features" className="explore-btn">
               Explore Features
               <span className="play">▶</span>
-            </button>
+            </a>
 
           </div>
 
@@ -158,8 +168,8 @@ function Home() {
               </div>
 
               <div>
-                <strong>95%</strong>
-                <span>AI Model Accuracy</span>
+                <strong>AI</strong>
+                <span>Smart Farm Intelligence</span>
               </div>
             </div>
 
@@ -291,10 +301,13 @@ function Home() {
             </div>
 
 
-            <button className="details-btn">
+            <Link
+              to="/crop"
+              className="details-btn"
+            >
               View Details
               <span>→</span>
-            </button>
+            </Link>
 
           </div>
 
@@ -370,7 +383,10 @@ function Home() {
                 environmental conditions.
               </p>
 
-              <Link to="/crop" className="feature-link crop-link">
+              <Link
+                to="/crop"
+                className="feature-link crop-link"
+              >
                 Find Best Crop
                 <span>→</span>
               </Link>
@@ -408,8 +424,6 @@ function Home() {
                 prevention and treatment guidance.
               </p>
 
-              {/* FIXED DISEASE LINK */}
-
               <Link
                 to="/disease"
                 className="feature-link crop-link"
@@ -423,7 +437,7 @@ function Home() {
           </article>
 
 
-          {/* ================= SOIL FERTILITY FEATURE ================= */}
+          {/* SOIL FERTILITY FEATURE */}
 
           <article className="feature-card soil-feature">
 
@@ -452,6 +466,44 @@ function Home() {
                 className="feature-link crop-link"
               >
                 Analyze Soil
+                <span>→</span>
+              </Link>
+
+            </div>
+
+          </article>
+
+
+          {/* ================= 3D FARM FEATURE ================= */}
+
+          <article className="feature-card farm3d-feature">
+
+            <div className="feature-visual">
+              🌾
+            </div>
+
+            <div className="feature-content">
+
+              <span className="feature-number">
+                05
+              </span>
+
+              <h2>
+                3D Smart Farm
+              </h2>
+
+              <p>
+                Explore an interactive digital farm that
+                brings crop health, soil conditions,
+                weather and farm intelligence into one
+                visual environment.
+              </p>
+
+              <Link
+                to="/farm"
+                className="feature-link crop-link"
+              >
+                Enter 3D Farm
                 <span>→</span>
               </Link>
 
@@ -534,7 +586,9 @@ function Home() {
 }
 
 
-/* ================= ROUTES ================= */
+// =====================================================
+// ROUTES
+// =====================================================
 
 function App() {
   return (
@@ -562,11 +616,14 @@ function App() {
           element={<DiseaseDetection />}
         />
 
-        {/* NEW SOIL FERTILITY ROUTE */}
-
         <Route
           path="/soil"
           element={<SoilFertility />}
+        />
+
+        <Route
+          path="/farm"
+          element={<Farm3D />}
         />
 
       </Routes>

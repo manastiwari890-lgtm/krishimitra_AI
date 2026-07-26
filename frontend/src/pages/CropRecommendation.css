@@ -584,3 +584,183 @@
     width: 100%;
   }
 }
+/* =====================================================
+   RECOMMENDATION DATA CONFIDENCE
+===================================================== */
+
+.crop-data-confidence {
+  margin-bottom: 18px;
+  padding: 16px 18px;
+
+  border-radius: 14px;
+
+  background: rgba(73, 220, 127, 0.045);
+  border: 1px solid rgba(73, 220, 127, 0.13);
+}
+
+.crop-data-confidence > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.crop-data-confidence strong {
+  color: #effff5;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.crop-data-confidence span {
+  flex-shrink: 0;
+
+  padding: 6px 10px;
+
+  border-radius: 999px;
+
+  background: rgba(73, 220, 127, 0.1);
+  border: 1px solid rgba(73, 220, 127, 0.16);
+
+  color: #7ceca4;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.crop-data-confidence p {
+  margin: 9px 0 0;
+
+  color: #8fa99a;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+  .crop-data-confidence > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 9px;
+  }
+}
+/* =====================================================
+   DISEASE WEATHER WATCH
+   ===================================================== */
+
+.crop-disease-weather-watch {
+  margin-top: 14px;
+  padding: 16px 18px;
+
+  background: rgba(255, 170, 60, 0.06);
+  border: 1px solid rgba(255, 184, 77, 0.22);
+  border-radius: 14px;
+}
+
+/* HEADER */
+
+.crop-disease-watch-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-bottom: 8px;
+}
+
+.crop-disease-watch-heading strong {
+  color: #ffca72;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* WEATHER-BASED BADGE */
+
+.crop-disease-watch-heading > span {
+  padding: 4px 9px;
+
+  color: #ffc86b;
+  background: rgba(255, 184, 77, 0.08);
+  border: 1px solid rgba(255, 184, 77, 0.18);
+  border-radius: 999px;
+
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+/* DISCLAIMER / EXPLANATION */
+
+.crop-disease-watch-note {
+  margin: 0 0 12px;
+
+  color: rgba(220, 235, 225, 0.72);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* DISEASE LIST */
+
+.crop-disease-weather-watch ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+/* INDIVIDUAL DISEASE */
+
+.crop-disease-weather-watch li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 10px 12px;
+
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.crop-disease-weather-watch li strong {
+  color: #eef8f1;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* RISK LEVEL */
+
+.crop-disease-weather-watch li > span {
+  padding: 3px 8px;
+
+  color: #ffca72;
+  background: rgba(255, 184, 77, 0.08);
+  border-radius: 999px;
+
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 600px) {
+  .crop-disease-weather-watch {
+    padding: 14px;
+  }
+
+  .crop-disease-watch-heading {
+    align-items: flex-start;
+  }
+
+  .crop-disease-weather-watch li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
