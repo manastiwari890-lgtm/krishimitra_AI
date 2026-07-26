@@ -5,32 +5,25 @@ import CropPlant from "./CropPlant";
 
 // =====================================================
 // KRISHIMITRA AI
-// 3D CROP FIELD SYSTEM
+// OPTIMIZED 3D CROP FIELD SYSTEM
 // =====================================================
 //
-// Generates plants across a single farm plot.
+// PERFORMANCE PASS 1
 //
-// CURRENT:
-// - Multiple crop rows
-// - Multiple plants per row
-// - Growth scaling
-// - Health status
-// - Natural plant-size variation
+// Improvements:
+// - Reduced default crop density
+// - Deterministic plant variation
+// - Deterministic rotation
+// - Memoized plant generation
+// - Preserves health system
+// - Preserves growth system
+// - Preserves real GLB crop rendering
 //
-// FUTURE:
-// - Different crop species
-// - Growth stages
-// - Disease visualization
-// - Soil moisture response
-// - Irrigation response
-// - Weather response
-// - Farm intelligence integration
+// Future optimization:
+// - Full InstancedMesh crop rendering
+// - Distance based LOD
 // =====================================================
 
-
-// =====================================================
-// CROP FIELD COMPONENT
-// =====================================================
 
 export default function CropField({
   position = [0, 0, 0],
@@ -39,9 +32,16 @@ export default function CropField({
 
   depth = 5.6,
 
-  rows = 7,
+  // Reduced from 7 × 9 = 63 plants
+  // to 5 × 7 = 35 plants per plot.
+  //
+  // Four plots:
+  // BEFORE = 252 plants
+  // NOW    = 140 plants
 
-  plantsPerRow = 9,
+  rows = 5,
+
+  plantsPerRow = 7,
 
   health = "healthy",
 
@@ -49,17 +49,12 @@ export default function CropField({
 }) {
 
   // ===================================================
-  // GENERATE PLANT POSITIONS
+  // GENERATE PLANTS
   // ===================================================
 
   const plants = useMemo(() => {
 
     const generatedPlants = [];
-
-
-    // =================================================
-    // CALCULATE PLANT SPACING
-    // =================================================
 
     const xSpacing =
       width / plantsPerRow;
@@ -68,19 +63,11 @@ export default function CropField({
       depth / rows;
 
 
-    // =================================================
-    // GENERATE ROWS
-    // =================================================
-
     for (
       let row = 0;
       row < rows;
       row += 1
     ) {
-
-      // ===============================================
-      // GENERATE PLANTS INSIDE EACH ROW
-      // ===============================================
 
       for (
         let plant = 0;
@@ -89,18 +76,13 @@ export default function CropField({
       ) {
 
         // =============================================
-        // X POSITION
+        // POSITION
         // =============================================
 
         const x =
           -width / 2 +
           xSpacing / 2 +
           plant * xSpacing;
-
-
-        // =============================================
-        // Z POSITION
-        // =============================================
 
         const z =
           -depth / 2 +
@@ -109,37 +91,40 @@ export default function CropField({
 
 
         // =============================================
-        // NATURAL SIZE VARIATION
+        // DETERMINISTIC VARIATION
         // =============================================
-        //
-        // This prevents every plant from looking
-        // completely identical.
-        //
-        // We use deterministic variation rather than
-        // Math.random() so plants don't move/change
-        // every time React renders.
-        // =============================================
+
+        const seed =
+          row * 12.9898 +
+          plant * 78.233;
+
 
         const variation =
-          Math.sin(
-            row * 12.9898 +
-            plant * 78.233
-          );
+          Math.sin(seed);
 
+
+        // =============================================
+        // SCALE
+        // =============================================
 
         const plantScale =
           growth *
           (
-            0.84 +
-            Math.abs(
-              variation
-            ) * 0.18
+            0.86 +
+            Math.abs(variation) *
+            0.16
           );
 
 
         // =============================================
-        // STORE GENERATED PLANT
+        // ROTATION
         // =============================================
+
+        const rotation =
+          Math.sin(
+            seed * 1.37
+          ) * 0.22;
+
 
         generatedPlants.push({
 
@@ -155,14 +140,11 @@ export default function CropField({
           scale:
             plantScale,
 
+          rotation,
         });
       }
     }
 
-
-    // =================================================
-    // RETURN GENERATED FIELD
-    // =================================================
 
     return generatedPlants;
 
@@ -176,7 +158,7 @@ export default function CropField({
 
 
   // ===================================================
-  // RENDER CROP FIELD
+  // RENDER
   // ===================================================
 
   return (
@@ -185,10 +167,6 @@ export default function CropField({
         position
       }
     >
-
-      {/* ===============================================
-          CROP PLANTS
-      =============================================== */}
 
       {plants.map(
         (plant) => (
@@ -204,6 +182,10 @@ export default function CropField({
 
             scale={
               plant.scale
+            }
+
+            rotation={
+              plant.rotation
             }
 
             health={

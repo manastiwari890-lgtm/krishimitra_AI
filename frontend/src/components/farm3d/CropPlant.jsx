@@ -1,40 +1,32 @@
 import * as THREE from "three";
 
 import {
-  useEffect,
   useMemo,
 } from "react";
 
 import {
-  Clone,
   useGLTF,
 } from "@react-three/drei";
 
 
 // =====================================================
 // KRISHIMITRA AI
-// SMART 3D CROP PLANT
+// OPTIMIZED SMART 3D CROP PLANT
 // =====================================================
 //
-// REAL MAIZE SYSTEM:
+// PERFORMANCE PASS 2
 //
-// - Real maize GLB
-// - Cached GLTF loading
-// - Multiple cloned plants
-// - Growth scaling
-// - Natural rotation support
-// - Health visualization
-// - Warning crop tint
-// - Diseased crop tint
-// - Shadows
+// Major changes:
 //
-// PRESERVED:
+// - GLB is loaded once through useGLTF cache
+// - Shared geometries are preserved
+// - Materials are prepared once per health state
+// - No per-plant material cloning
+// - No per-plant useEffect traversal
+// - receiveShadow removed from crop leaves
+// - Original GLB textures preserved
 //
-// - Procedural crop renderer
-// - Healthy state
-// - Warning state
-// - Diseased state
-// - Existing scale system
+// CropField architecture remains compatible.
 // =====================================================
 
 
@@ -47,39 +39,265 @@ const MAIZE_MODEL_PATH =
 
 
 // =====================================================
-// HEALTH COLORS
+// SHARED MATERIAL CACHE
+// =====================================================
+//
+// Materials only need to exist once for:
+//
+// healthy
+// warning
+// diseased
+//
+// Every plant can reuse them.
 // =====================================================
 
-function getHealthColors(health) {
+const materialCache =
+  new Map();
 
-  if (health === "warning") {
-    return {
-      stem: "#6f7630",
-      leaf: "#a9a13b",
-      leafDark: "#827c2d",
-    };
+
+// =====================================================
+// CREATE OPTIMIZED MATERIAL
+// =====================================================
+
+function createOptimizedMaterial(
+  originalMaterial,
+  health
+) {
+
+  const cacheKey =
+    `${originalMaterial.uuid}-${health}`;
+
+
+  if (
+    materialCache.has(
+      cacheKey
+    )
+  ) {
+
+    return materialCache.get(
+      cacheKey
+    );
   }
 
 
-  if (health === "diseased") {
-    return {
-      stem: "#65552c",
-      leaf: "#80632d",
-      leafDark: "#594326",
-    };
+  // Clone ONCE per material + health state.
+
+  const material =
+    originalMaterial.clone();
+
+
+  // ===================================================
+  // LEAF SUPPORT
+  // ===================================================
+
+  material.side =
+    THREE.DoubleSide;
+
+
+  // ===================================================
+  // TEXTURE OPTIMIZATION
+  // ===================================================
+
+  if (
+    material.map
+  ) {
+
+    // 4 is enough for vegetation.
+    // Previous value was 8.
+
+    material.map.anisotropy =
+      Math.min(
+        material.map.anisotropy || 1,
+        4
+      );
   }
 
 
-  return {
-    stem: "#386641",
-    leaf: "#4f8f3a",
-    leafDark: "#357a38",
-  };
+  // ===================================================
+  // HEALTH APPEARANCE
+  // ===================================================
+
+  if (
+    material.color
+  ) {
+
+    if (
+      health === "warning"
+    ) {
+
+      material.color.set(
+        "#b7a84c"
+      );
+
+    } else if (
+      health === "diseased"
+    ) {
+
+      material.color.set(
+        "#80613b"
+      );
+
+    } else {
+
+      material.color.set(
+        "#ffffff"
+      );
+    }
+  }
+
+
+  // ===================================================
+  // DISEASE ROUGHNESS
+  // ===================================================
+
+  if (
+    health === "diseased"
+  ) {
+
+    material.roughness =
+      Math.max(
+        material.roughness ?? 0.8,
+        0.9
+      );
+  }
+
+
+  material.needsUpdate =
+    true;
+
+
+  materialCache.set(
+    cacheKey,
+    material
+  );
+
+
+  return material;
 }
 
 
 // =====================================================
-// PROCEDURAL FALLBACK PLANT
+// REAL MAIZE PLANT
+// =====================================================
+
+function RealMaizePlant({
+  health = "healthy",
+}) {
+
+  const gltf =
+    useGLTF(
+      MAIZE_MODEL_PATH
+    );
+
+
+  // ===================================================
+  // PREPARE MODEL
+  // ===================================================
+  //
+  // Geometry remains shared.
+  //
+  // Materials are reused between plants of the same
+  // health state.
+  //
+  // ===================================================
+
+  const plantScene =
+    useMemo(() => {
+
+      // Scene structure is cloned,
+      // but geometry remains shared.
+
+      const clonedScene =
+        gltf.scene.clone(
+          true
+        );
+
+
+      clonedScene.traverse(
+        (object) => {
+
+          if (
+            !object.isMesh
+          ) {
+            return;
+          }
+
+
+          // ===========================================
+          // SHADOW OPTIMIZATION
+          // ===========================================
+
+          object.castShadow =
+            true;
+
+          // Crop leaves don't need to receive expensive
+          // shadows from every surrounding object.
+
+          object.receiveShadow =
+            false;
+
+
+          // ===========================================
+          // SHARED MATERIALS
+          // ===========================================
+
+          if (
+            Array.isArray(
+              object.material
+            )
+          ) {
+
+            object.material =
+              object.material.map(
+                (material) =>
+                  createOptimizedMaterial(
+                    material,
+                    health
+                  )
+              );
+
+          } else if (
+            object.material
+          ) {
+
+            object.material =
+              createOptimizedMaterial(
+                object.material,
+                health
+              );
+          }
+
+
+          // ===========================================
+          // FRUSTUM CULLING
+          // ===========================================
+
+          object.frustumCulled =
+            true;
+        }
+      );
+
+
+      return clonedScene;
+
+    }, [
+      gltf.scene,
+      health,
+    ]);
+
+
+  return (
+    <primitive
+      object={
+        plantScene
+      }
+    />
+  );
+}
+
+
+// =====================================================
+// PROCEDURAL FALLBACK
 // =====================================================
 
 function ProceduralCropPlant({
@@ -87,15 +305,41 @@ function ProceduralCropPlant({
 }) {
 
   const colors =
-    useMemo(
-      () =>
-        getHealthColors(
-          health
-        ),
-      [
-        health,
-      ]
-    );
+    useMemo(() => {
+
+      if (
+        health === "warning"
+      ) {
+
+        return {
+          stem: "#6f7630",
+          leaf: "#a9a13b",
+          leafDark: "#827c2d",
+        };
+      }
+
+
+      if (
+        health === "diseased"
+      ) {
+
+        return {
+          stem: "#65552c",
+          leaf: "#80632d",
+          leafDark: "#594326",
+        };
+      }
+
+
+      return {
+        stem: "#386641",
+        leaf: "#4f8f3a",
+        leafDark: "#357a38",
+      };
+
+    }, [
+      health,
+    ]);
 
 
   return (
@@ -109,7 +353,6 @@ function ProceduralCropPlant({
           0.48,
           0,
         ]}
-        castShadow
       >
 
         <cylinderGeometry
@@ -117,7 +360,7 @@ function ProceduralCropPlant({
             0.035,
             0.05,
             0.95,
-            7,
+            6,
           ]}
         />
 
@@ -146,14 +389,13 @@ function ProceduralCropPlant({
           0,
           0.75,
         ]}
-        castShadow
       >
 
         <sphereGeometry
           args={[
             0.24,
-            8,
             6,
+            4,
           ]}
         />
 
@@ -182,14 +424,13 @@ function ProceduralCropPlant({
           0,
           -0.72,
         ]}
-        castShadow
       >
 
         <sphereGeometry
           args={[
             0.25,
-            8,
             6,
+            4,
           ]}
         />
 
@@ -218,14 +459,13 @@ function ProceduralCropPlant({
           0,
           0.65,
         ]}
-        castShadow
       >
 
         <sphereGeometry
           args={[
             0.2,
-            8,
             6,
+            4,
           ]}
         />
 
@@ -254,14 +494,13 @@ function ProceduralCropPlant({
           0,
           -0.65,
         ]}
-        castShadow
       >
 
         <sphereGeometry
           args={[
             0.18,
-            8,
             6,
+            4,
           ]}
         />
 
@@ -277,7 +516,7 @@ function ProceduralCropPlant({
       </mesh>
 
 
-      {/* TOP GROWTH */}
+      {/* TOP */}
 
       <mesh
         position={[
@@ -290,14 +529,13 @@ function ProceduralCropPlant({
           1,
           0.7,
         ]}
-        castShadow
       >
 
         <sphereGeometry
           args={[
             0.16,
-            8,
             6,
+            4,
           ]}
         />
 
@@ -313,227 +551,6 @@ function ProceduralCropPlant({
       </mesh>
 
     </group>
-  );
-}
-
-
-// =====================================================
-// REAL MAIZE PLANT
-// =====================================================
-
-function RealMaizePlant({
-  health = "healthy",
-}) {
-
-  const gltf =
-    useGLTF(
-      MAIZE_MODEL_PATH
-    );
-
-
-  // ===================================================
-  // CLONE MODEL FOR THIS PLANT
-  // ===================================================
-  //
-  // This is important.
-  //
-  // We do NOT directly modify gltf.scene materials,
-  // because every plant uses the cached GLB.
-  //
-  // Each plant receives its own scene/material clone so
-  // warning plants can be yellow while healthy plants
-  // remain green.
-  // ===================================================
-
-  const plantScene =
-    useMemo(() => {
-
-      const clonedScene =
-        gltf.scene.clone(
-          true
-        );
-
-
-      clonedScene.traverse(
-        (object) => {
-
-          if (!object.isMesh) {
-            return;
-          }
-
-
-          object.castShadow =
-            true;
-
-          object.receiveShadow =
-            true;
-
-
-          // ===========================================
-          // CLONE MATERIAL
-          // ===========================================
-
-          if (
-            Array.isArray(
-              object.material
-            )
-          ) {
-
-            object.material =
-              object.material.map(
-                (material) =>
-                  material.clone()
-              );
-
-          } else if (
-            object.material
-          ) {
-
-            object.material =
-              object.material.clone();
-          }
-        }
-      );
-
-
-      return clonedScene;
-
-    }, [
-      gltf.scene,
-    ]);
-
-
-  // ===================================================
-  // APPLY HEALTH APPEARANCE
-  // ===================================================
-
-  useEffect(() => {
-
-    plantScene.traverse(
-      (object) => {
-
-        if (
-          !object.isMesh ||
-          !object.material
-        ) {
-          return;
-        }
-
-
-        const materials =
-          Array.isArray(
-            object.material
-          )
-            ? object.material
-            : [
-                object.material,
-              ];
-
-
-        materials.forEach(
-          (material) => {
-
-            // =========================================
-            // VEGETATION SUPPORT
-            // =========================================
-
-            material.side =
-              THREE.DoubleSide;
-
-
-            if (
-              material.map
-            ) {
-
-              material.map.anisotropy =
-                8;
-
-              material.map.needsUpdate =
-                true;
-            }
-
-
-            // =========================================
-            // HEALTH COLOR
-            // =========================================
-
-            if (
-              material.color
-            ) {
-
-              if (
-                health ===
-                "warning"
-              ) {
-
-                // Yellow-green stressed crop.
-
-                material.color.set(
-                  "#b7a84c"
-                );
-
-              } else if (
-                health ===
-                "diseased"
-              ) {
-
-                // Brown / dry crop.
-
-                material.color.set(
-                  "#80613b"
-                );
-
-              } else {
-
-                // Healthy crops keep a neutral material
-                // multiplier so original GLB textures
-                // remain dominant.
-
-                material.color.set(
-                  "#ffffff"
-                );
-              }
-            }
-
-
-            // =========================================
-            // ROUGHNESS RESPONSE
-            // =========================================
-
-            if (
-              health ===
-              "diseased"
-            ) {
-
-              material.roughness =
-                Math.max(
-                  material.roughness ??
-                    0.8,
-                  0.9
-                );
-            }
-
-
-            material.needsUpdate =
-              true;
-          }
-        );
-
-      }
-    );
-
-  }, [
-    plantScene,
-    health,
-  ]);
-
-
-  return (
-    <primitive
-      object={
-        plantScene
-      }
-    />
   );
 }
 
@@ -559,7 +576,7 @@ export default function CropPlant({
 }) {
 
   // ===================================================
-  // MODEL NORMALIZATION
+  // REAL MODEL SCALE
   // ===================================================
 
   const realModelScale =
@@ -574,10 +591,6 @@ export default function CropPlant({
   // ===================================================
   // NATURAL ROTATION
   // ===================================================
-  //
-  // If CropField doesn't provide a rotation yet,
-  // derive a deterministic one from position.
-  // ===================================================
 
   const naturalRotation =
     useMemo(() => {
@@ -585,6 +598,7 @@ export default function CropPlant({
       if (
         rotation !== 0
       ) {
+
         return rotation;
       }
 
@@ -670,7 +684,7 @@ export default function CropPlant({
 
 
 // =====================================================
-// PRELOAD MAIZE MODEL
+// PRELOAD
 // =====================================================
 
 useGLTF.preload(
