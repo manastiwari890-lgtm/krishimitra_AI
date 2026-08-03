@@ -98,7 +98,6 @@ function FarmWorld({ quality, rainEnabled }) {
     RAIN SYSTEM
 =============================================== */}
 
-
       {/* ===============================================
     TERRAIN
 =============================================== */}
@@ -126,25 +125,13 @@ function FarmWorld({ quality, rainEnabled }) {
           CROP FIELD 1
       =============================================== */}
 
-      <CropField position={[-4.2, 0, -3.7]} health="healthy" growth={0.9} />
+      <CropField plotId="A" position={[-4.2, 0, -3.7]} />
 
-      {/* ===============================================
-          CROP FIELD 2
-      =============================================== */}
+      <CropField plotId="B" position={[4.2, 0, -3.7]} />
 
-      <CropField position={[4.2, 0, -3.7]} health="healthy" growth={1} />
+      <CropField plotId="C" position={[-4.2, 0, 3.7]} />
 
-      {/* ===============================================
-          CROP FIELD 3
-      =============================================== */}
-
-      <CropField position={[-4.2, 0, 3.7]} health="warning" growth={0.82} />
-
-      {/* ===============================================
-          CROP FIELD 4
-      =============================================== */}
-
-      <CropField position={[4.2, 0, 3.7]} health="healthy" growth={0.95} />
+      <CropField plotId="D" position={[4.2, 0, 3.7]} />
 
       {/* ===============================================
           CAMERA CONTROLS
