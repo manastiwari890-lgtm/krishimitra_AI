@@ -406,3 +406,13 @@ farmState = {
     },
   },
 };
+## Version 0.5.0 - Farm State Foundation
+
+Completed:
+
+- Farm State
+- Farm Controller
+- React Context Provider
+- Farm Hooks
+- Initial Plot State Integration
+- Architecture migrated toward Digital Twin
