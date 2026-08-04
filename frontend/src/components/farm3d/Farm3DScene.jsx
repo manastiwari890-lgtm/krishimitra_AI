@@ -14,7 +14,8 @@ import FarmGroundDetails from "./FarmGroundDetails";
 import useFarmQuality from "./useFarmQuality";
 import FarmClouds from "./FarmClouds";
 import FarmRain from "./FarmRain";
-
+import { useFarmState } from "../../farm/hooks/useFarmState";
+import { useFarmController } from "../../farm/controller/useFarmController";
 // =====================================================
 // KRISHIMITRA AI
 // OPTIMIZED 3D SMART FARM
@@ -93,6 +94,7 @@ function FarmWorld({ quality, rainEnabled }) {
         mieDirectionalG={0.8}
       />
       <FarmClouds quality={quality} rainEnabled={rainEnabled} />
+      <FarmClouds quality={quality} />
 
       {/* ===============================================
     RAIN SYSTEM
@@ -168,7 +170,11 @@ function FarmLoadingScreen() {
 
 export default function Farm3DScene() {
   const quality = useFarmQuality();
-  const [rainEnabled, setRainEnabled] = useState(false);
+  const { farmState } = useFarmState();
+
+  const controller = useFarmController();
+
+  const rainEnabled = farmState.weather.isRaining;
   return (
     <div
       style={{
@@ -278,7 +284,13 @@ export default function Farm3DScene() {
       >
         <button
           type="button"
-          onClick={() => setRainEnabled((current) => !current)}
+          onClick={() => {
+            if (rainEnabled) {
+              controller.stopRain();
+            } else {
+              controller.startRain();
+            }
+          }}
           style={{
             border: rainEnabled
               ? "1px solid rgba(147, 197, 253, 0.65)"
