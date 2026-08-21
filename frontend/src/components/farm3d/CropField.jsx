@@ -4,9 +4,51 @@ import InstancedCropField from "./InstancedCropField";
 
 import { useFarmState } from "../../farm/hooks/useFarmState";
 
+import {
+  getCropConfig,
+} from "./cropConfig";
+
 // =====================================================
 // KRISHIMITRA AI
-// DATA-DRIVEN CROP FIELD
+// SPECIES-AWARE CROP FIELD
+// =====================================================
+//
+// RULES:
+//
+// 1. Every plot contains 35 plants.
+// 2. 5 rows × 7 plants.
+// 3. Positions never change.
+// 4. Growth never changes plant count.
+// 5. Growth never changes spacing.
+// 6. All plants of the plot grow together.
+// 7. Each species has its own growth configuration.
+// 8. Each species has its own maximum height.
+// 9. Plants never merge.
+// =====================================================
+
+const DEFAULT_ROWS = 5;
+const DEFAULT_PLANTS_PER_ROW = 7;
+
+// =====================================================
+// NORMALIZE GROWTH
+// =====================================================
+
+function normalizeGrowth(value) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    Math.min(
+      1,
+      value / 100,
+    ),
+  );
+}
+
+// =====================================================
+// COMPONENT
 // =====================================================
 
 export default function CropField({
@@ -18,44 +60,126 @@ export default function CropField({
 
   depth = 5.6,
 
-  rows = 5,
+  rows = DEFAULT_ROWS,
 
-  plantsPerRow = 7,
+  plantsPerRow = DEFAULT_PLANTS_PER_ROW,
 }) {
+
   // ===================================================
   // FARM STATE
   // ===================================================
 
-  const { farmState } = useFarmState();
+  const { farmState } =
+    useFarmState();
+
+  // ===================================================
+  // CURRENT PLOT
+  // ===================================================
 
   const plot =
-    farmState.plots.find((plot) => plot.id === plotId) ??
+    farmState.plots.find(
+      (currentPlot) =>
+        currentPlot.id === plotId,
+    ) ??
     farmState.plots[0];
 
   // ===================================================
-  // CURRENT STATE
+  // CROP TYPE
   // ===================================================
 
-  const health = plot.health;
+  const cropType =
+    plot?.crop ?? "maize";
 
-  // Temporary growth value.
-  // Later this will come from plot.growth.
-
-  const growth = 1;
+  const cropConfig =
+    getCropConfig(
+      cropType,
+    );
 
   // ===================================================
-  // GENERATE PLANTS
+  // HEALTH
+  // ===================================================
+
+  const health =
+    plot?.health ?? "healthy";
+
+  // ===================================================
+  // GROWTH
+  // ===================================================
+
+  const normalizedGrowth =
+    normalizeGrowth(
+      plot?.growth,
+    );
+
+  // ===================================================
+  // HEIGHT
+  // ===================================================
+  //
+  // Example:
+  //
+  // growth = 0
+  // → 15% height
+  //
+  // growth = 100
+  // → 85% height
+  //
+  // The maximum comes from the crop configuration.
+  // ===================================================
+
+  const heightScale =
+    cropConfig.minHeight +
+    (
+      cropConfig.maxHeight -
+      cropConfig.minHeight
+    ) *
+    normalizedGrowth;
+
+  // ===================================================
+  // GENERATE FIXED GRID
   // ===================================================
 
   const plants = useMemo(() => {
+
     const generatedPlants = [];
 
-    const xSpacing = width / plantsPerRow;
+    // -------------------------------------------------
+    // IMPORTANT:
+    //
+    // We deliberately keep the grid fixed.
+    //
+    // Never derive plant count from growth.
+    // -------------------------------------------------
 
-    const zSpacing = depth / rows;
+    const safeRows =
+      DEFAULT_ROWS;
 
-    for (let row = 0; row < rows; row += 1) {
-      for (let plant = 0; plant < plantsPerRow; plant += 1) {
+    const safePlantsPerRow =
+      DEFAULT_PLANTS_PER_ROW;
+
+    const xSpacing =
+      width /
+      safePlantsPerRow;
+
+    const zSpacing =
+      depth /
+      safeRows;
+
+    // -------------------------------------------------
+    // 35 PLANTS
+    // -------------------------------------------------
+
+    for (
+      let row = 0;
+      row < safeRows;
+      row += 1
+    ) {
+
+      for (
+        let plant = 0;
+        plant < safePlantsPerRow;
+        plant += 1
+      ) {
+
         const x =
           -width / 2 +
           xSpacing / 2 +
@@ -66,46 +190,87 @@ export default function CropField({
           zSpacing / 2 +
           row * zSpacing;
 
+        // =============================================
+        // DETERMINISTIC ROTATION
+        // =============================================
+
         const seed =
           row * 12.9898 +
           plant * 78.233;
 
-        const variation = Math.sin(seed);
-
-        const plantScale =
-          growth *
-          (0.86 + Math.abs(variation) * 0.16);
-
         const rotation =
-          Math.sin(seed * 1.37) * 0.22;
+          Math.sin(
+            seed * 1.37,
+          ) * 0.08;
 
         generatedPlants.push({
-          id: `${row}-${plant}`,
 
-          position: [x, 0.2, z],
+          id:
+            `${plotId}-${row}-${plant}`,
 
-          scale: plantScale,
+          position: [
+            x,
+            0,
+            z,
+          ],
 
           rotation,
+
+          // =========================================
+          // WIDTH
+          // =========================================
+
+          widthScale:
+            cropConfig.widthScale,
+
+          // =========================================
+          // HEIGHT
+          // =========================================
+
+          heightScale,
         });
       }
     }
 
     return generatedPlants;
+
   }, [
+    plotId,
     width,
     depth,
-    rows,
-    plantsPerRow,
-    growth,
+    heightScale,
+    cropConfig.widthScale,
   ]);
 
+  // ===================================================
+  // RENDER
+  // ===================================================
+
   return (
-    <group position={position}>
+    <group
+      position={position}
+    >
+
       <InstancedCropField
-        plants={plants}
-        health={health}
+
+        plants={
+          plants
+        }
+
+        health={
+          health
+        }
+
+        cropType={
+          cropType
+        }
+
+        cropConfig={
+          cropConfig
+        }
+
       />
+
     </group>
   );
 }

@@ -66,6 +66,8 @@ export const initialFarmState = {
       health: "healthy",
 
       moisture: 58,
+      growth: 0,
+      diseaseRisk: "Low",
     },
 
     {
@@ -76,6 +78,8 @@ export const initialFarmState = {
       health: "healthy",
 
       moisture: 56,
+      growth: 0,
+      diseaseRisk: "Low",
     },
 
     {
@@ -86,6 +90,8 @@ export const initialFarmState = {
       health: "warning",
 
       moisture: 34,
+      growth: 0,
+      diseaseRisk: "Low",
     },
 
     {
@@ -96,6 +102,8 @@ export const initialFarmState = {
       health: "healthy",
 
       moisture: 60,
+      growth: 0,
+      diseaseRisk: "Low",
     },
   ],
 };

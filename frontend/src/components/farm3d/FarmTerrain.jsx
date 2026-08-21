@@ -1,39 +1,43 @@
 import * as THREE from "three";
-
-import {
-  useMemo,
-} from "react";
-
-import {
-  useTexture,
-} from "@react-three/drei";
-
+import { useEffect, useMemo } from "react";
+import { useTexture } from "@react-three/drei";
+import { useThree } from "@react-three/fiber";
 
 // =====================================================
 // KRISHIMITRA AI
-// NATURAL 3D FARM TERRAIN
+// HIGH QUALITY + OPTIMIZED FARM TERRAIN
 // =====================================================
 //
-// CURRENT:
+// FEATURES
 //
-// - Procedural natural terrain
-// - PBR grass landscape
-// - PBR cultivated soil
-// - Grass boundaries
-// - Normal mapping
-// - Roughness mapping
-// - Texture tiling
+// ✓ Smooth procedural terrain
+// ✓ 4K-ready PBR textures
+// ✓ Proper sRGB color management
+// ✓ Normal mapping
+// ✓ Roughness mapping
+// ✓ Anisotropic filtering
+// ✓ Mipmap filtering
+// ✓ Controlled texture repetition
+// ✓ Smooth central cultivated area
+// ✓ Natural outer terrain
+// ✓ No unnecessary terrain subdivisions
 //
-// FUTURE:
+// IMPORTANT
 //
-// - Terrain material blending
-// - Seasonal vegetation
-// - Moisture-dependent soil
-// - Weather-dependent terrain
+// Texture quality is improved WITHOUT increasing
+// terrain geometry.
+//
+// This keeps the farm smooth AND performant.
 // =====================================================
-
 
 export default function FarmTerrain() {
+
+  // ===================================================
+  // THREE.JS RENDERER
+  // ===================================================
+
+  const { gl } = useThree();
+
 
   // ===================================================
   // LOAD SOIL TEXTURES
@@ -66,10 +70,18 @@ export default function FarmTerrain() {
 
 
   // ===================================================
-  // CONFIGURE TEXTURES
+  // TEXTURE CONFIGURATION
   // ===================================================
 
-  useMemo(() => {
+  useEffect(() => {
+
+    const maxAnisotropy =
+      gl.capabilities.getMaxAnisotropy();
+
+
+    // ===============================================
+    // SOIL TEXTURES
+    // ===============================================
 
     const soilTextures = [
       soilColor,
@@ -78,28 +90,51 @@ export default function FarmTerrain() {
     ];
 
 
-    soilTextures.forEach(
-      (texture) => {
+    soilTextures.forEach((texture) => {
 
-        texture.wrapS =
-          THREE.RepeatWrapping;
+      texture.wrapS =
+        THREE.RepeatWrapping;
 
-        texture.wrapT =
-          THREE.RepeatWrapping;
+      texture.wrapT =
+        THREE.RepeatWrapping;
 
-        texture.repeat.set(
-          4,
-          3
+
+      // Controlled repetition.
+      // Higher values make the texture look repetitive.
+      // Lower values preserve the 4K detail better.
+
+      texture.repeat.set(
+        3.2,
+        2.6
+      );
+
+
+      texture.anisotropy =
+        Math.min(
+          16,
+          maxAnisotropy
         );
 
-        texture.anisotropy =
-          8;
 
-        texture.needsUpdate =
-          true;
-      }
-    );
+      texture.minFilter =
+        THREE.LinearMipmapLinearFilter;
 
+      texture.magFilter =
+        THREE.LinearFilter;
+
+
+      texture.generateMipmaps =
+        true;
+
+
+      texture.needsUpdate =
+        true;
+    });
+
+
+    // ===============================================
+    // GRASS TEXTURES
+    // ===============================================
 
     const grassTextures = [
       grassColor,
@@ -108,27 +143,45 @@ export default function FarmTerrain() {
     ];
 
 
-    grassTextures.forEach(
-      (texture) => {
+    grassTextures.forEach((texture) => {
 
-        texture.wrapS =
-          THREE.RepeatWrapping;
+      texture.wrapS =
+        THREE.RepeatWrapping;
 
-        texture.wrapT =
-          THREE.RepeatWrapping;
+      texture.wrapT =
+        THREE.RepeatWrapping;
 
-        texture.repeat.set(
-          12,
-          12
+
+      // Grass can repeat more frequently
+      // because the camera sees a larger area.
+
+      texture.repeat.set(
+        8,
+        8
+      );
+
+
+      texture.anisotropy =
+        Math.min(
+          16,
+          maxAnisotropy
         );
 
-        texture.anisotropy =
-          8;
 
-        texture.needsUpdate =
-          true;
-      }
-    );
+      texture.minFilter =
+        THREE.LinearMipmapLinearFilter;
+
+      texture.magFilter =
+        THREE.LinearFilter;
+
+
+      texture.generateMipmaps =
+        true;
+
+
+      texture.needsUpdate =
+        true;
+    });
 
 
     // ===============================================
@@ -142,6 +195,10 @@ export default function FarmTerrain() {
       THREE.SRGBColorSpace;
 
 
+    // ===============================================
+    // NON-COLOR TEXTURES
+    // ===============================================
+
     soilNormal.colorSpace =
       THREE.NoColorSpace;
 
@@ -154,6 +211,10 @@ export default function FarmTerrain() {
     grassRoughness.colorSpace =
       THREE.NoColorSpace;
 
+
+    // ===============================================
+    // UPDATE
+    // ===============================================
 
     soilColor.needsUpdate =
       true;
@@ -174,6 +235,7 @@ export default function FarmTerrain() {
       true;
 
   }, [
+    gl,
     soilColor,
     soilNormal,
     soilRoughness,
@@ -184,7 +246,7 @@ export default function FarmTerrain() {
 
 
   // ===================================================
-  // PROCEDURAL TERRAIN GEOMETRY
+  // TERRAIN GEOMETRY
   // ===================================================
 
   const terrainGeometry = useMemo(() => {
@@ -215,6 +277,10 @@ export default function FarmTerrain() {
         positions.getY(i);
 
 
+      // =============================================
+      // DISTANCE FROM FARM CENTER
+      // =============================================
+
       const distanceFromCenter =
         Math.sqrt(
           x * x +
@@ -222,9 +288,9 @@ export default function FarmTerrain() {
         );
 
 
-      // Keep the actual cultivated region relatively
-      // flat while creating subtle natural elevation
-      // farther away from the farm.
+      // =============================================
+      // KEEP FARM AREA SMOOTH
+      // =============================================
 
       const outerStrength =
         THREE.MathUtils.clamp(
@@ -236,6 +302,10 @@ export default function FarmTerrain() {
           1
         );
 
+
+      // =============================================
+      // LARGE NATURAL WAVES
+      // =============================================
 
       const waveOne =
         Math.sin(
@@ -251,12 +321,13 @@ export default function FarmTerrain() {
 
       const waveThree =
         Math.sin(
-          (
-            x +
-            y
-          ) * 0.16
+          (x + y) * 0.16
         ) * 0.18;
 
+
+      // =============================================
+      // SMALL NATURAL VARIATION
+      // =============================================
 
       const smallerVariation =
         Math.sin(
@@ -264,6 +335,10 @@ export default function FarmTerrain() {
           y * 0.35
         ) * 0.08;
 
+
+      // =============================================
+      // FINAL HEIGHT
+      // =============================================
 
       const height =
         (
@@ -286,12 +361,83 @@ export default function FarmTerrain() {
       true;
 
 
+    // Recalculate smooth normals.
+
     geometry.computeVertexNormals();
+
+
+    // Helps avoid unnecessary memory retention.
+
+    geometry.computeBoundingSphere();
 
 
     return geometry;
 
   }, []);
+
+
+  // ===================================================
+  // MATERIALS
+  // ===================================================
+
+  const grassMaterial =
+    useMemo(() => {
+
+      return (
+        <meshStandardMaterial
+          map={grassColor}
+          normalMap={grassNormal}
+          roughnessMap={grassRoughness}
+
+          normalScale={
+            new THREE.Vector2(
+              0.48,
+              0.48
+            )
+          }
+
+          roughness={0.95}
+          metalness={0}
+
+          envMapIntensity={0.55}
+        />
+      );
+
+    }, [
+      grassColor,
+      grassNormal,
+      grassRoughness,
+    ]);
+
+
+  const soilMaterial =
+    useMemo(() => {
+
+      return (
+        <meshStandardMaterial
+          map={soilColor}
+          normalMap={soilNormal}
+          roughnessMap={soilRoughness}
+
+          normalScale={
+            new THREE.Vector2(
+              0.62,
+              0.62
+            )
+          }
+
+          roughness={0.96}
+          metalness={0}
+
+          envMapIntensity={0.5}
+        />
+      );
+
+    }, [
+      soilColor,
+      soilNormal,
+      soilRoughness,
+    ]);
 
 
   // ===================================================
@@ -302,14 +448,12 @@ export default function FarmTerrain() {
     <group>
 
 
-      {/* ===============================================
-          PBR NATURAL GRASS LAND
-      =============================================== */}
+      {/* =================================================
+          NATURAL OUTER GRASS TERRAIN
+      ================================================= */}
 
       <mesh
-        geometry={
-          terrainGeometry
-        }
+        geometry={terrainGeometry}
 
         rotation={[
           -Math.PI / 2,
@@ -326,41 +470,14 @@ export default function FarmTerrain() {
         receiveShadow
       >
 
-        <meshStandardMaterial
-          map={
-            grassColor
-          }
-
-          normalMap={
-            grassNormal
-          }
-
-          roughnessMap={
-            grassRoughness
-          }
-
-          normalScale={
-            new THREE.Vector2(
-              0.55,
-              0.55
-            )
-          }
-
-          roughness={
-            1
-          }
-
-          metalness={
-            0
-          }
-        />
+        {grassMaterial}
 
       </mesh>
 
 
-      {/* ===============================================
-          PBR CENTRAL FARM SOIL
-      =============================================== */}
+      {/* =================================================
+          CENTRAL CULTIVATED FARM SOIL
+      ================================================= */}
 
       <mesh
         rotation={[
@@ -387,42 +504,14 @@ export default function FarmTerrain() {
           ]}
         />
 
-
-        <meshStandardMaterial
-          map={
-            soilColor
-          }
-
-          normalMap={
-            soilNormal
-          }
-
-          roughnessMap={
-            soilRoughness
-          }
-
-          normalScale={
-            new THREE.Vector2(
-              0.7,
-              0.7
-            )
-          }
-
-          roughness={
-            1
-          }
-
-          metalness={
-            0
-          }
-        />
+        {soilMaterial}
 
       </mesh>
 
 
-      {/* ===============================================
+      {/* =================================================
           LEFT GRASS BORDER
-      =============================================== */}
+      ================================================= */}
 
       <mesh
         position={[
@@ -430,8 +519,10 @@ export default function FarmTerrain() {
           -0.02,
           0,
         ]}
+
         receiveShadow
       >
+
         <boxGeometry
           args={[
             1.2,
@@ -440,21 +531,14 @@ export default function FarmTerrain() {
           ]}
         />
 
-        <meshStandardMaterial
-          map={grassColor}
-          normalMap={grassNormal}
-          roughnessMap={
-            grassRoughness
-          }
-          roughness={1}
-          metalness={0}
-        />
+        {grassMaterial}
+
       </mesh>
 
 
-      {/* ===============================================
+      {/* =================================================
           RIGHT GRASS BORDER
-      =============================================== */}
+      ================================================= */}
 
       <mesh
         position={[
@@ -462,8 +546,10 @@ export default function FarmTerrain() {
           -0.02,
           0,
         ]}
+
         receiveShadow
       >
+
         <boxGeometry
           args={[
             1.2,
@@ -472,21 +558,14 @@ export default function FarmTerrain() {
           ]}
         />
 
-        <meshStandardMaterial
-          map={grassColor}
-          normalMap={grassNormal}
-          roughnessMap={
-            grassRoughness
-          }
-          roughness={1}
-          metalness={0}
-        />
+        {grassMaterial}
+
       </mesh>
 
 
-      {/* ===============================================
+      {/* =================================================
           FRONT GRASS BORDER
-      =============================================== */}
+      ================================================= */}
 
       <mesh
         position={[
@@ -494,8 +573,10 @@ export default function FarmTerrain() {
           -0.02,
           10.1,
         ]}
+
         receiveShadow
       >
+
         <boxGeometry
           args={[
             27.4,
@@ -504,21 +585,14 @@ export default function FarmTerrain() {
           ]}
         />
 
-        <meshStandardMaterial
-          map={grassColor}
-          normalMap={grassNormal}
-          roughnessMap={
-            grassRoughness
-          }
-          roughness={1}
-          metalness={0}
-        />
+        {grassMaterial}
+
       </mesh>
 
 
-      {/* ===============================================
+      {/* =================================================
           BACK GRASS BORDER
-      =============================================== */}
+      ================================================= */}
 
       <mesh
         position={[
@@ -526,8 +600,10 @@ export default function FarmTerrain() {
           -0.02,
           -10.1,
         ]}
+
         receiveShadow
       >
+
         <boxGeometry
           args={[
             27.4,
@@ -536,15 +612,8 @@ export default function FarmTerrain() {
           ]}
         />
 
-        <meshStandardMaterial
-          map={grassColor}
-          normalMap={grassNormal}
-          roughnessMap={
-            grassRoughness
-          }
-          roughness={1}
-          metalness={0}
-        />
+        {grassMaterial}
+
       </mesh>
 
     </group>

@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import {
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -9,6 +10,8 @@ import {
   Html,
   useTexture,
 } from "@react-three/drei";
+import { useFarmState } from "../../farm/hooks/useFarmState";
+import { useFrame } from "@react-three/fiber";
 
 
 // =====================================================
@@ -651,112 +654,163 @@ function IrrigationChannel({
   position,
   length,
   soilTextures,
+  flowEnabled = true,
+  flowDirection = 1,
 }) {
+  const waterRef = useRef(null);
+  const shader = useMemo(() => ({
+    uniforms: {
+      uTime: { value: 0 },
+      uFlow: { value: flowEnabled ? 1 : 0 },
+      uDirection: { value: flowDirection },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      varying vec3 vWorldNormal;
+      void main() {
+        vUv = uv;
+        vWorldNormal = normalize(normalMatrix * normal);
+        vec3 p = position;
+        float wave = sin((uv.x * 20.0 + uv.y * 7.0)) * 0.006;
+        p.y += wave;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform float uFlow;
+      uniform float uDirection;
+      varying vec2 vUv;
+      varying vec3 vWorldNormal;
+      void main() {
+        float t = uTime * (0.28 + uFlow * 0.72) * uDirection;
+        vec2 uv = vUv;
+        float rippleA = sin((uv.x * 34.0 + uv.y * 10.0) - t * 5.0);
+        float rippleB = sin((uv.x * 72.0 - uv.y * 18.0) - t * 9.0);
+        float caustic = smoothstep(0.35, 0.95, rippleA * 0.5 + rippleB * 0.25 + 0.45);
+        float diagonal = smoothstep(0.42, 0.9, sin((uv.x + uv.y * 0.8) * 28.0 - t * 7.0) * 0.5 + 0.5);
+        vec3 deep = vec3(0.015, 0.20, 0.24);
+        vec3 mid = vec3(0.025, 0.43, 0.48);
+        vec3 light = vec3(0.20, 0.72, 0.72);
+        vec3 col = mix(deep, mid, caustic * 0.72);
+        col = mix(col, light, diagonal * 0.22);
+        float edge = smoothstep(0.02, 0.12, min(min(vUv.x, 1.0-vUv.x), min(vUv.y, 1.0-vUv.y)));
+        float spec = pow(max(dot(normalize(vWorldNormal), normalize(vec3(-0.3, 0.85, 0.45))), 0.0), 14.0);
+        col += spec * 0.28;
+        float alpha = 0.94 * (0.78 + edge * 0.22);
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+  }), [flowDirection, flowEnabled]);
+
+  useFrame((_, delta) => {
+    if (!waterRef.current) return;
+    waterRef.current.material.uniforms.uTime.value += delta;
+    waterRef.current.material.uniforms.uFlow.value += ((flowEnabled ? 1 : 0) - waterRef.current.material.uniforms.uFlow.value) * Math.min(1, delta * 4);
+  });
 
   return (
     <group position={position}>
-
-
-      {/* ===============================================
-          CHANNEL SOIL
-      =============================================== */}
-
-      <mesh
-        position={[
-          0,
-          0.015,
-          0,
-        ]}
-
-        receiveShadow
-      >
-
-        <boxGeometry
-          args={[
-            length,
-            0.06,
-            0.42,
-          ]}
-        />
-
-
+      <mesh position={[0, 0.015, 0]} receiveShadow>
+        <boxGeometry args={[length, 0.08, 0.58]} />
         <meshStandardMaterial
-          map={
-            soilTextures.color
-          }
-
-          normalMap={
-            soilTextures.normal
-          }
-
-          roughnessMap={
-            soilTextures.roughness
-          }
-
-          normalScale={
-            new THREE.Vector2(
-              0.45,
-              0.45
-            )
-          }
-
-          roughness={1}
-
-          metalness={0}
-
-          color="#69513d"
+          map={soilTextures.color}
+          normalMap={soilTextures.normal}
+          roughnessMap={soilTextures.roughness}
+          normalScale={new THREE.Vector2(0.5, 0.5)}
+          roughness={0.96}
+          color="#604a38"
         />
-
       </mesh>
 
-
-      {/* ===============================================
-          WATER
-      =============================================== */}
+      {/* Raised canal banks */}
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[0, 0.12, side * 0.29]} receiveShadow castShadow>
+          <boxGeometry args={[length, 0.18, 0.12]} />
+          <meshStandardMaterial color="#76563b" roughness={0.9} />
+        </mesh>
+      ))}
 
       <mesh
-        position={[
-          0,
-          0.055,
-          0,
-        ]}
+        ref={waterRef}
+        position={[0, 0.09, 0]}
+        rotation={[0, 0, 0]}
       >
-
-        <boxGeometry
-          args={[
-            length - 0.1,
-            0.035,
-            0.25,
-          ]}
-        />
-
-
-        <meshPhysicalMaterial
-          color="#5fa8b8"
-
-          roughness={0.16}
-
-          metalness={0}
-
-          transmission={0.15}
-
+        <planeGeometry args={[Math.max(0.2, length - 0.12), 0.42, 1, 8]} />
+        <shaderMaterial
+          uniforms={shader.uniforms}
+          vertexShader={shader.vertexShader}
+          fragmentShader={shader.fragmentShader}
           transparent
-
-          opacity={0.82}
-
-          clearcoat={0.7}
-
-          clearcoatRoughness={
-            0.15
-          }
+          depthWrite={false}
         />
-
       </mesh>
 
+      {/* Soft foam along the banks */}
+      {[-1, 1].map((side) => (
+        <mesh key={`foam-${side}`} position={[0, 0.102, side * 0.205]}>
+          <planeGeometry args={[Math.max(0.2, length - 0.25), 0.045]} />
+          <meshBasicMaterial color="#b9f4ed" transparent opacity={0.34} />
+        </mesh>
+      ))}
     </group>
   );
 }
 
+// =====================================================
+// IRRIGATION PUMP + CONTROL GATE
+// =====================================================
+
+function IrrigationPump({ position, active, onToggle }) {
+  const rotorRef = useRef(null);
+
+  useFrame((_, delta) => {
+    if (!rotorRef.current) return;
+    if (active) rotorRef.current.rotation.z -= delta * 5.5;
+  });
+
+  return (
+    <group position={position} onClick={(e) => { e.stopPropagation(); onToggle(); }}>
+      <mesh position={[0, 0.35, 0]} castShadow>
+        <cylinderGeometry args={[0.48, 0.52, 0.7, 18]} />
+        <meshStandardMaterial color="#416c6c" roughness={0.42} metalness={0.45} />
+      </mesh>
+      <mesh position={[0, 0.74, 0]} castShadow>
+        <cylinderGeometry args={[0.26, 0.26, 0.16, 16]} />
+        <meshStandardMaterial color="#273d40" roughness={0.35} metalness={0.6} />
+      </mesh>
+      <group ref={rotorRef} position={[0, 0.84, 0]}>
+        {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((r) => (
+          <mesh key={r} rotation={[0, 0, r]}>
+            <boxGeometry args={[0.08, 0.52, 0.035]} />
+            <meshStandardMaterial color="#d6e4df" roughness={0.3} metalness={0.7} />
+          </mesh>
+        ))}
+      </group>
+      <mesh position={[0.65, 0.55, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.11, 0.11, 1.1, 14]} />
+        <meshStandardMaterial color="#557d7d" roughness={0.3} metalness={0.55} />
+      </mesh>
+      <FacilityLabel title={active ? "Pump ON" : "Pump OFF"} subtitle="Click to control water" />
+    </group>
+  );
+}
+
+function CanalGate({ position, open, onToggle }) {
+  return (
+    <group position={position} onClick={(e) => { e.stopPropagation(); onToggle(); }}>
+      <mesh position={[0, 0.45, 0]} castShadow>
+        <boxGeometry args={[0.72, 0.9, 0.12]} />
+        <meshStandardMaterial color={open ? "#527c68" : "#263b38"} roughness={0.5} metalness={0.25} />
+      </mesh>
+      <mesh position={[0, 1.02, 0]}>
+        <torusGeometry args={[0.22, 0.045, 8, 20]} />
+        <meshStandardMaterial color="#c4a76a" roughness={0.35} metalness={0.55} />
+      </mesh>
+      <FacilityLabel title={open ? "Gate Open" : "Gate Closed"} subtitle="Click to control flow" />
+    </group>
+  );
+}
 
 // =====================================================
 // SMART PLOT INFORMATION PANEL
@@ -1101,7 +1155,7 @@ function SmartPlotPanel({
               "center",
           }}
         >
-          Prototype data • Backend integration next
+         Live Digital Twin • Simulation active
         </div>
 
       </div>
@@ -1180,6 +1234,381 @@ function DataBox({
 
 
 // =====================================================
+// KRISHIMITRA AI
+// LIGHTWEIGHT FARM WORLD FACILITIES
+// =====================================================
+
+function FacilityLabel({ title, subtitle }) {
+  return (
+    <Html
+      center
+      distanceFactor={12}
+      position={[0, 2.5, 0]}
+      style={{
+        pointerEvents: "none",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <div
+        style={{
+          padding: "6px 10px",
+          borderRadius: "9px",
+          background: "rgba(8, 30, 20, 0.88)",
+          border: "1px solid rgba(126, 255, 183, 0.45)",
+          color: "#f5fff8",
+          fontFamily: "Inter, system-ui, sans-serif",
+          fontSize: "11px",
+          fontWeight: 700,
+          boxShadow: "0 5px 16px rgba(0,0,0,.28)",
+        }}
+      >
+        {title}
+        {subtitle ? (
+          <span
+            style={{
+              display: "block",
+              marginTop: "2px",
+              fontSize: "9px",
+              opacity: 0.7,
+              fontWeight: 500,
+            }}
+          >
+            {subtitle}
+          </span>
+        ) : null}
+      </div>
+    </Html>
+  );
+}
+
+function FacilityButton({ position, label, onClick }) {
+  return (
+    <Html
+      center
+      distanceFactor={11}
+      position={position}
+      style={{ pointerEvents: "auto" }}
+    >
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick();
+        }}
+        style={{
+          border: "1px solid rgba(155,255,197,.55)",
+          background: "rgba(7, 39, 26, .92)",
+          color: "#eafff1",
+          padding: "7px 10px",
+          borderRadius: "10px",
+          fontSize: "10px",
+          fontWeight: 800,
+          cursor: "pointer",
+          boxShadow: "0 6px 18px rgba(0,0,0,.25)",
+        }}
+      >
+        {label}
+      </button>
+    </Html>
+  );
+}
+
+function FarmHouse({ position, onSelect }) {
+  return (
+    <group position={position} onClick={(e) => { e.stopPropagation(); onSelect("Farmhouse"); }}>
+      <mesh position={[0, 0.8, 0]} castShadow>
+        <boxGeometry args={[3.2, 1.6, 2.7]} />
+        <meshStandardMaterial color="#d9c7a1" roughness={0.85} />
+      </mesh>
+      <mesh position={[0, 1.95, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[2.35, 1.3, 4]} />
+        <meshStandardMaterial color="#6d3f25" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.7, 1.38]}>
+        <boxGeometry args={[0.65, 1.05, 0.08]} />
+        <meshStandardMaterial color="#4a2b1d" roughness={0.9} />
+      </mesh>
+      <mesh position={[-1.05, 0.9, 1.39]}>
+        <boxGeometry args={[0.6, 0.55, 0.06]} />
+        <meshStandardMaterial color="#8ed9df" roughness={0.25} metalness={0.05} />
+      </mesh>
+      <FacilityLabel title="Farmhouse" subtitle="Operations" />
+    </group>
+  );
+}
+
+function Barn({ position, onSelect }) {
+  return (
+    <group position={position} onClick={(e) => { e.stopPropagation(); onSelect("Barn"); }}>
+      <mesh position={[0, 1.0, 0]} castShadow>
+        <boxGeometry args={[3.8, 2, 3]} />
+        <meshStandardMaterial color="#8f4e31" roughness={0.92} />
+      </mesh>
+      <mesh position={[0, 2.55, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <coneGeometry args={[2.15, 3.9, 4]} />
+        <meshStandardMaterial color="#4d3026" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.95, 1.53]}>
+        <boxGeometry args={[1.35, 1.35, 0.08]} />
+        <meshStandardMaterial color="#3a251d" roughness={0.95} />
+      </mesh>
+      <FacilityLabel title="Barn" subtitle="Storage & livestock" />
+    </group>
+  );
+}
+
+function Greenhouse({ position, onSelect }) {
+  return (
+    <group position={position} onClick={(e) => { e.stopPropagation(); onSelect("Greenhouse"); }}>
+      <mesh position={[0, 1.05, 0]} castShadow>
+        <boxGeometry args={[4.2, 2.1, 2.7]} />
+        <meshStandardMaterial
+          color="#a9e7df"
+          transparent
+          opacity={0.34}
+          roughness={0.12}
+          metalness={0.05}
+        />
+      </mesh>
+      <mesh position={[0, 2.45, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <coneGeometry args={[2.0, 1.0, 4]} />
+        <meshStandardMaterial
+          color="#b9f3ea"
+          transparent
+          opacity={0.3}
+          roughness={0.1}
+        />
+      </mesh>
+      {[-1.25, 0, 1.25].map((x) => (
+        <mesh key={x} position={[x, 0.5, 0]}>
+          <boxGeometry args={[0.12, 0.65, 1.9]} />
+          <meshStandardMaterial color="#2f8b57" roughness={0.85} />
+        </mesh>
+      ))}
+      <FacilityLabel title="Greenhouse" subtitle="Protected crops" />
+    </group>
+  );
+}
+
+function StorageShed({ position, onSelect }) {
+  return (
+    <group position={position} onClick={(e) => { e.stopPropagation(); onSelect("Storage"); }}>
+      <mesh position={[0, 0.75, 0]} castShadow>
+        <boxGeometry args={[2.6, 1.5, 2.2]} />
+        <meshStandardMaterial color="#b18a5a" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 1.72, 0]}>
+        <coneGeometry args={[1.85, 0.95, 4]} />
+        <meshStandardMaterial color="#6c4b30" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.68, 1.13]}>
+        <boxGeometry args={[0.7, 1.0, 0.07]} />
+        <meshStandardMaterial color="#4c3727" roughness={0.92} />
+      </mesh>
+      <FacilityLabel title="Tool Shed" subtitle="Equipment" />
+    </group>
+  );
+}
+
+function WaterTank({ position, onSelect }) {
+  return (
+    <group position={position} onClick={(e) => { e.stopPropagation(); onSelect("Water Tank"); }}>
+      <mesh position={[0, 1.65, 0]} castShadow>
+        <cylinderGeometry args={[1.05, 1.05, 3.3, 20]} />
+        <meshStandardMaterial color="#d6d9d4" roughness={0.42} metalness={0.15} />
+      </mesh>
+      <mesh position={[0, 3.35, 0]}>
+        <cylinderGeometry args={[1.08, 1.08, 0.16, 20]} />
+        <meshStandardMaterial color="#56717b" roughness={0.55} metalness={0.35} />
+      </mesh>
+      {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((rotation) => (
+        <mesh
+          key={rotation}
+          position={[Math.cos(rotation) * 1.45, 1.15, Math.sin(rotation) * 1.45]}
+        >
+          <boxGeometry args={[0.12, 2.3, 0.12]} />
+          <meshStandardMaterial color="#5d5e5a" roughness={0.8} metalness={0.2} />
+        </mesh>
+      ))}
+      <FacilityLabel title="Water Tank" subtitle="Irrigation supply" />
+    </group>
+  );
+}
+
+function CattlePen({ position, onSelect }) {
+  const posts = [];
+  const xs = [-2, 0, 2];
+  const zs = [-1.2, 1.2];
+  xs.forEach((x) => {
+    zs.forEach((z) => posts.push([x, 0.65, z]));
+  });
+
+  return (
+    <group position={position} onClick={(e) => { e.stopPropagation(); onSelect("Cattle Area"); }}>
+      <mesh position={[0, 0.12, 0]} receiveShadow>
+        <boxGeometry args={[4.8, 0.18, 3.1]} />
+        <meshStandardMaterial color="#705338" roughness={1} />
+      </mesh>
+      {posts.map(([x, y, z], i) => (
+        <mesh key={i} position={[x, y, z]} castShadow>
+          <cylinderGeometry args={[0.09, 0.1, 1.3, 8]} />
+          <meshStandardMaterial color="#5a3925" roughness={0.95} />
+        </mesh>
+      ))}
+      {[-0.6, 0.6].map((y) => (
+        <group key={y}>
+          <mesh position={[0, y, -1.2]}>
+            <boxGeometry args={[4.3, 0.08, 0.08]} />
+            <meshStandardMaterial color="#805c3a" roughness={0.95} />
+          </mesh>
+          <mesh position={[0, y, 1.2]}>
+            <boxGeometry args={[4.3, 0.08, 0.08]} />
+            <meshStandardMaterial color="#805c3a" roughness={0.95} />
+          </mesh>
+        </group>
+      ))}
+      <FacilityLabel title="Cattle Area" subtitle="Livestock" />
+    </group>
+  );
+}
+
+function TractorShed({ position, onSelect }) {
+  return (
+    <group position={position} onClick={(e) => { e.stopPropagation(); onSelect("Tractor Shed"); }}>
+      <mesh position={[0, 1.05, 0]} castShadow>
+        <boxGeometry args={[3.6, 2.1, 3]} />
+        <meshStandardMaterial color="#5f6c5f" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 2.28, 0]} rotation={[0, Math.PI / 4, 0]}>
+        <coneGeometry args={[2.2, 1.0, 4]} />
+        <meshStandardMaterial color="#34483b" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.9, 1.53]}>
+        <boxGeometry args={[1.65, 1.45, 0.08]} />
+        <meshStandardMaterial color="#222b25" roughness={0.8} />
+      </mesh>
+      <FacilityLabel title="Tractor Shed" subtitle="Machinery" />
+    </group>
+  );
+}
+
+function FarmerNPC({ position }) {
+  const groupRef = useRef();
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.55) * 0.08;
+  });
+
+  return (
+    <group ref={groupRef} position={position}>
+      <mesh position={[0, 1.15, 0]} castShadow>
+        <capsuleGeometry args={[0.28, 0.72, 6, 10]} />
+        <meshStandardMaterial color="#4b7652" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 1.85, 0]} castShadow>
+        <sphereGeometry args={[0.28, 12, 10]} />
+        <meshStandardMaterial color="#b87955" roughness={0.95} />
+      </mesh>
+      <mesh position={[0, 2.1, 0]}>
+        <cylinderGeometry args={[0.36, 0.36, 0.12, 16]} />
+        <meshStandardMaterial color="#8c633b" roughness={0.95} />
+      </mesh>
+      <mesh position={[0, 2.16, 0]}>
+        <coneGeometry args={[0.34, 0.28, 16]} />
+        <meshStandardMaterial color="#8c633b" roughness={0.95} />
+      </mesh>
+      <mesh position={[-0.4, 1.2, 0]} rotation={[0, 0, -0.35]}>
+        <capsuleGeometry args={[0.09, 0.5, 5, 8]} />
+        <meshStandardMaterial color="#4b7652" roughness={0.9} />
+      </mesh>
+      <mesh position={[0.4, 1.2, 0]} rotation={[0, 0, 0.35]}>
+        <capsuleGeometry args={[0.09, 0.5, 5, 8]} />
+        <meshStandardMaterial color="#4b7652" roughness={0.9} />
+      </mesh>
+      <FacilityLabel title="Farmer" subtitle="Field worker" />
+    </group>
+  );
+}
+
+function FacilityActionPanel({ facility, onClose }) {
+  if (!facility) return null;
+
+  const actions = {
+    Farmhouse: ["Farm overview", "Weather station", "Daily report"],
+    Barn: ["Livestock", "Feed stock", "Storage"],
+    Greenhouse: ["Protected crops", "Temperature", "Ventilation"],
+    Storage: ["Seeds", "Fertilizer", "Tools"],
+    "Water Tank": ["Water level", "Pump", "Irrigation"],
+    "Cattle Area": ["Animal count", "Feed", "Health"],
+    "Tractor Shed": ["Tractor", "Fuel", "Maintenance"],
+  }[facility] || ["Open"];
+
+  return (
+    <Html
+      center
+      distanceFactor={10}
+      position={[0, 4.5, 0]}
+      style={{ pointerEvents: "auto" }}
+    >
+      <div
+        style={{
+          width: 220,
+          padding: 12,
+          borderRadius: 14,
+          background: "rgba(7, 27, 18, .95)",
+          border: "1px solid rgba(123, 255, 178, .45)",
+          color: "#f3fff7",
+          fontFamily: "Inter, system-ui, sans-serif",
+          boxShadow: "0 15px 35px rgba(0,0,0,.35)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <strong>{facility}</strong>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              border: 0,
+              background: "rgba(255,255,255,.08)",
+              color: "#fff",
+              borderRadius: 8,
+              cursor: "pointer",
+              width: 26,
+              height: 26,
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        <div style={{ display: "grid", gap: 7, marginTop: 10 }}>
+          {actions.map((action) => (
+            <button
+              type="button"
+              key={action}
+              onClick={() => {}}
+              style={{
+                border: "1px solid rgba(255,255,255,.12)",
+                background: "rgba(255,255,255,.06)",
+                color: "#eafff0",
+                padding: "7px 9px",
+                borderRadius: 8,
+                textAlign: "left",
+                cursor: "pointer",
+                fontSize: 10,
+              }}
+            >
+              {action}
+            </button>
+          ))}
+        </div>
+      </div>
+    </Html>
+  );
+}
+
+// =====================================================
 // COMPLETE SMART FARM FIELD LAYOUT
 // =====================================================
 
@@ -1200,196 +1629,120 @@ export default function FarmFields() {
     setHoveredPlotId,
   ] = useState(null);
 
+  const [
+    activeFacility,
+    setActiveFacility,
+  ] = useState(null);
+
+  const [waterFlowEnabled, setWaterFlowEnabled] = useState(true);
+  const [gateOpen, setGateOpen] = useState(true);
 
   // ===================================================
-  // SMART FARM DATA
+  // FARM STATE
   // ===================================================
-  //
-  // TEMPORARY PROTOTYPE DATA.
-  //
-  // Later this object will be populated using:
-  //
-  // soil API
-  // weather API
-  // crop recommendation model
-  // disease detection model
-  // irrigation logic
   // ===================================================
-
-  const plots =
-    useMemo(
-      () => [
-        {
-          id:
-            "plot-a",
-
-          name:
-            "Plot A",
-
-          crop:
-            "Maize",
-
-          position: [
-            -4.2,
-            0,
-            -3.7,
-          ],
-
-          health:
-            "healthy",
-
-          moisture:
-            68,
-
-          ph:
-            6.7,
-
-          nitrogen:
-            72,
-
-          phosphorus:
-            48,
-
-          potassium:
-            61,
-
-          diseaseRisk:
-            "Low",
-
-          irrigationRequired:
-            false,
-        },
-
-
-        {
-          id:
-            "plot-b",
-
-          name:
-            "Plot B",
-
-          crop:
-            "Maize",
-
-          position: [
-            4.2,
-            0,
-            -3.7,
-          ],
-
-          health:
-            "healthy",
-
-          moisture:
-            61,
-
-          ph:
-            6.5,
-
-          nitrogen:
-            65,
-
-          phosphorus:
-            51,
-
-          potassium:
-            58,
-
-          diseaseRisk:
-            "Low",
-
-          irrigationRequired:
-            false,
-        },
-
-
-        {
-          id:
-            "plot-c",
-
-          name:
-            "Plot C",
-
-          crop:
-            "Maize",
-
-          position: [
-            -4.2,
-            0,
-            3.7,
-          ],
-
-          health:
-            "warning",
-
-          moisture:
-            39,
-
-          ph:
-            6.2,
-
-          nitrogen:
-            49,
-
-          phosphorus:
-            42,
-
-          potassium:
-            55,
-
-          diseaseRisk:
-            "Medium",
-
-          irrigationRequired:
-            true,
-        },
-
-
-        {
-          id:
-            "plot-d",
-
-          name:
-            "Plot D",
-
-          crop:
-            "Maize",
-
-          position: [
-            4.2,
-            0,
-            3.7,
-          ],
-
-          health:
-            "healthy",
-
-          moisture:
-            73,
-
-          ph:
-            6.8,
-
-          nitrogen:
-            76,
-
-          phosphorus:
-            54,
-
-          potassium:
-            67,
-
-          diseaseRisk:
-            "Low",
-
-          irrigationRequired:
-            false,
-        },
-      ],
-      []
-    );
-
-
+  // FARM STATE
+  // ===================================================
+  
+  const { farmState } = useFarmState();
+  
+  // ===================================================
+  // ORIGINAL 3D FARM LAYOUT
+  // ===================================================
+  
+  const plotLayout = useMemo(
+    () => [
+      {
+        id: "plot-a",
+        stateId: "A",
+        name: "Plot A",
+        crop: "Maize",
+        position: [-4.2, 0, -3.7],
+  
+        ph: 6.7,
+        nitrogen: 72,
+        phosphorus: 48,
+        potassium: 61,
+        diseaseRisk: "Low",
+        irrigationRequired: false,
+      },
+  
+      {
+        id: "plot-b",
+        stateId: "B",
+        name: "Plot B",
+        crop: "Maize",
+        position: [4.2, 0, -3.7],
+  
+        ph: 6.5,
+        nitrogen: 65,
+        phosphorus: 51,
+        potassium: 58,
+        diseaseRisk: "Low",
+        irrigationRequired: false,
+      },
+  
+      {
+        id: "plot-c",
+        stateId: "C",
+        name: "Plot C",
+        crop: "Maize",
+        position: [-4.2, 0, 3.7],
+  
+        ph: 6.2,
+        nitrogen: 49,
+        phosphorus: 42,
+        potassium: 55,
+        diseaseRisk: "Medium",
+        irrigationRequired: true,
+      },
+  
+      {
+        id: "plot-d",
+        stateId: "D",
+        name: "Plot D",
+        crop: "Maize",
+        position: [4.2, 0, 3.7],
+  
+        ph: 6.8,
+        nitrogen: 76,
+        phosphorus: 54,
+        potassium: 67,
+        diseaseRisk: "Low",
+        irrigationRequired: false,
+      },
+    ],
+    [],
+  );
+  
+  // ===================================================
+  // MERGE LIVE DIGITAL TWIN STATE
+  // ===================================================
+  
+  const plots = useMemo(
+    () =>
+      plotLayout.map((layoutPlot) => {
+        const livePlot = farmState.plots.find(
+          (plot) =>
+            plot.id === layoutPlot.stateId,
+        );
+  
+        return {
+          ...layoutPlot,
+  
+          // Live values from Digital Twin
+          ...(livePlot || {}),
+  
+          // Keep the original visual ID
+          id: layoutPlot.id,
+  
+          // Keep original display information
+          name: layoutPlot.name,
+          position: layoutPlot.position,
+        };
+      }),
+    [plotLayout, farmState.plots],
+  );
   // ===================================================
   // SELECTED PLOT
   // ===================================================
@@ -1742,6 +2095,8 @@ export default function FarmFields() {
         soilTextures={
           soilTextures
         }
+        flowEnabled={waterFlowEnabled && gateOpen}
+        flowDirection={-1}
       />
 
 
@@ -1759,8 +2114,130 @@ export default function FarmFields() {
         soilTextures={
           soilTextures
         }
+        flowEnabled={waterFlowEnabled && gateOpen}
+        flowDirection={1}
       />
 
+      <IrrigationPump
+        position={[-6.9, 0.2, 7.0]}
+        active={waterFlowEnabled}
+        onToggle={() => setWaterFlowEnabled((value) => !value)}
+      />
+
+      <CanalGate
+        position={[0, 0.12, 7.02]}
+        open={gateOpen}
+        onToggle={() => setGateOpen((value) => !value)}
+      />
+
+
+      {/* ===============================================
+          FARM WORLD FACILITIES
+      =============================================== */}
+
+      <FarmHouse
+        position={[-10.5, 0, -7.2]}
+        onSelect={setActiveFacility}
+      />
+
+      <Barn
+        position={[10.5, 0, -7.2]}
+        onSelect={setActiveFacility}
+      />
+
+      <Greenhouse
+        position={[-10.2, 0, 3.8]}
+        onSelect={setActiveFacility}
+      />
+
+      <StorageShed
+        position={[10.2, 0, 3.8]}
+        onSelect={setActiveFacility}
+      />
+
+      <WaterTank
+        position={[0, 0, -9.2]}
+        onSelect={setActiveFacility}
+      />
+
+      <TractorShed
+        position={[-10.4, 0, 8.8]}
+        onSelect={setActiveFacility}
+      />
+
+      <CattlePen
+        position={[10.2, 0, 8.8]}
+        onSelect={setActiveFacility}
+      />
+
+      <FarmerNPC
+        position={[0, 0.12, 8.75]}
+      />
+
+      {/* ===============================================
+          3D FACILITY QUICK-ACTION BUTTONS
+      =============================================== */}
+
+      <FacilityButton
+        position={[-10.5, 3.1, -7.2]}
+        label="FARM"
+        onClick={() => setActiveFacility("Farmhouse")}
+      />
+
+      <FacilityButton
+        position={[10.5, 3.1, -7.2]}
+        label="BARN"
+        onClick={() => setActiveFacility("Barn")}
+      />
+
+      <FacilityButton
+        position={[-10.2, 3.05, 3.8]}
+        label="GROW"
+        onClick={() => setActiveFacility("Greenhouse")}
+      />
+
+      <FacilityButton
+        position={[10.2, 2.7, 3.8]}
+        label="STORE"
+        onClick={() => setActiveFacility("Storage")}
+      />
+
+      <FacilityButton
+        position={[0, 4.0, -9.2]}
+        label="WATER"
+        onClick={() => setActiveFacility("Water Tank")}
+      />
+
+      <FacilityButton
+        position={[-6.9, 1.7, 7.0]}
+        label={waterFlowEnabled ? "PUMP ON" : "PUMP OFF"}
+        onClick={() => setWaterFlowEnabled((value) => !value)}
+      />
+
+      <FacilityButton
+        position={[0, 1.75, 7.0]}
+        label={gateOpen ? "GATE OPEN" : "GATE CLOSED"}
+        onClick={() => setGateOpen((value) => !value)}
+      />
+
+      <FacilityButton
+        position={[-10.4, 3.0, 8.8]}
+        label="TRACTOR"
+        onClick={() => setActiveFacility("Tractor Shed")}
+      />
+
+      <FacilityButton
+        position={[10.2, 2.5, 8.8]}
+        label="CATTLE"
+        onClick={() => setActiveFacility("Cattle Area")}
+      />
+
+      {activeFacility && (
+        <FacilityActionPanel
+          facility={activeFacility}
+          onClose={() => setActiveFacility(null)}
+        />
+      )}
 
       {/* ===============================================
           SELECTED SMART PLOT PANEL

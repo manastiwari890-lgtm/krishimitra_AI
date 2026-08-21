@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
@@ -13,23 +14,22 @@ import {
 
 // =====================================================
 // KRISHIMITRA AI
-// OPTIMIZED NATURAL FARM VEGETATION
+// OPTIMIZED FARM VEGETATION
 // =====================================================
 //
-// CURRENT SYSTEM:
+// PERFORMANCE PASS
 //
 // - Real GLB trees
-// - Corrected natural tree materials
-// - Tree shadows disabled for performance
+// - GPU-instanced trees
+// - Shared tree geometry
+// - Shared tree materials
 // - Instanced bushes
 // - Instanced grass
-// - Shared geometry/materials
-//
-// PERFORMANCE:
-// - No tree shadow rendering
-// - No grass shadows
-// - No bush shadows
-// - Bushes + grass use InstancedMesh
+// - No vegetation shadows
+// - Frustum culling enabled
+// - Original tree positions preserved
+// - Original tree rotations preserved
+// - Original tree scale variation preserved
 //
 // =====================================================
 
@@ -43,20 +43,18 @@ const TREE_MODEL_PATH =
 
 
 // =====================================================
-// TREE MATERIAL HELPERS
+// TREE MATERIAL DETECTION
 // =====================================================
 
 function isLeafMaterial(
   object,
   material
 ) {
-
   const materialName =
     (
       material?.name ||
       ""
     ).toLowerCase();
-
 
   const objectName =
     (
@@ -64,14 +62,9 @@ function isLeafMaterial(
       ""
     ).toLowerCase();
 
-
   const combinedName =
     `${materialName} ${objectName}`;
 
-
-  // ===================================================
-  // TRY MODEL NAMES FIRST
-  // ===================================================
 
   if (
     combinedName.includes("leaf") ||
@@ -80,21 +73,15 @@ function isLeafMaterial(
     combinedName.includes("branch") ||
     combinedName.includes("crown")
   ) {
-
     return true;
   }
 
-
-  // ===================================================
-  // TRANSPARENT / ALPHA TEXTURES ARE VERY OFTEN LEAVES
-  // ===================================================
 
   if (
     material?.alphaMap ||
     material?.transparent ||
     material?.alphaTest > 0
   ) {
-
     return true;
   }
 
@@ -111,19 +98,10 @@ function prepareTreeMaterial(
   object,
   sourceMaterial
 ) {
-
-  if (
-    !sourceMaterial
-  ) {
-
+  if (!sourceMaterial) {
     return sourceMaterial;
   }
 
-
-  // Clone once for this tree scene.
-  //
-  // This prevents us from modifying the original
-  // cached GLTF material.
 
   const material =
     sourceMaterial.clone();
@@ -137,32 +115,27 @@ function prepareTreeMaterial(
 
 
   // ===================================================
-  // COMMON SETTINGS
+  // COMMON
   // ===================================================
 
   material.side =
     THREE.DoubleSide;
 
-
   material.depthWrite =
     true;
 
-
   material.depthTest =
     true;
-
 
   material.transparent =
     false;
 
 
   // ===================================================
-  // TEXTURE SETTINGS
+  // TEXTURE OPTIMIZATION
   // ===================================================
 
-  if (
-    material.map
-  ) {
+  if (material.map) {
 
     material.map.anisotropy =
       Math.min(
@@ -170,10 +143,17 @@ function prepareTreeMaterial(
         4
       );
 
-
     material.map.colorSpace =
       THREE.SRGBColorSpace;
 
+    material.map.minFilter =
+      THREE.LinearMipmapLinearFilter;
+
+    material.map.magFilter =
+      THREE.LinearFilter;
+
+    material.map.generateMipmaps =
+      true;
 
     material.map.needsUpdate =
       true;
@@ -181,58 +161,30 @@ function prepareTreeMaterial(
 
 
   // ===================================================
-  // LEAF MATERIAL
+  // LEAVES
   // ===================================================
 
-  if (
-    leafMaterial
-  ) {
-
-    // -------------------------------------------------
-    // Keep original leaf texture if available.
-    // -------------------------------------------------
+  if (leafMaterial) {
 
     material.color.set(
       "#4f7f3d"
     );
 
-
-    // -------------------------------------------------
-    // Alpha cutout
-    //
-    // This is important for foliage textures.
-    //
-    // It removes transparent background areas instead
-    // of blending them as ugly white/black rectangles.
-    // -------------------------------------------------
-
     material.alphaTest =
       0.45;
-
 
     material.transparent =
       false;
 
-
     material.opacity =
       1;
-
-
-    // -------------------------------------------------
-    // Natural foliage surface
-    // -------------------------------------------------
 
     material.roughness =
       0.88;
 
-
     material.metalness =
       0;
 
-
-    // -------------------------------------------------
-    // Leaves should not glow.
-    // -------------------------------------------------
 
     if (
       material.emissive
@@ -242,42 +194,34 @@ function prepareTreeMaterial(
         "#000000"
       );
 
-
       material.emissiveIntensity =
         0;
     }
+
   }
 
 
   // ===================================================
-  // TRUNK / WOOD MATERIAL
+  // TRUNK / WOOD
   // ===================================================
 
   else {
-
-    // Preserve texture but slightly tint it toward
-    // natural bark.
 
     material.color.set(
       "#7a6653"
     );
 
-
     material.alphaTest =
       0;
-
 
     material.transparent =
       false;
 
-
     material.opacity =
       1;
 
-
     material.roughness =
       0.95;
-
 
     material.metalness =
       0;
@@ -290,7 +234,6 @@ function prepareTreeMaterial(
       material.emissive.set(
         "#000000"
       );
-
 
       material.emissiveIntensity =
         0;
@@ -307,64 +250,64 @@ function prepareTreeMaterial(
 
 
 // =====================================================
-// REAL TREE
+// INSTANCED TREE SYSTEM
 // =====================================================
 
-function FarmTree({
-  position,
-  scale,
-  rotation,
+function InstancedTrees({
+  trees,
+  gltf,
 }) {
 
-  const gltf =
-    useGLTF(
-      TREE_MODEL_PATH
-    );
+  const meshRefs =
+    useRef([]);
 
 
   // ===================================================
-  // PREPARE TREE
+  // EXTRACT TREE MESHES
   // ===================================================
 
-  const tree =
+  const treeParts =
     useMemo(() => {
 
-      const cloned =
-        gltf.scene.clone(
-          true
-        );
+      gltf.scene.updateMatrixWorld(
+        true
+      );
 
 
-      cloned.traverse(
+      const parts = [];
+
+
+      gltf.scene.traverse(
         (object) => {
 
           if (
-            !object.isMesh
+            !object.isMesh ||
+            !object.geometry ||
+            !object.material
           ) {
-
             return;
           }
 
 
-          // ===========================================
-          // PERFORMANCE
-          // ===========================================
+          // ---------------------------------------------
+          // BAKE GLTF HIERARCHY TRANSFORM
+          // ---------------------------------------------
 
-          object.castShadow =
-            false;
-
-
-          object.receiveShadow =
-            false;
+          const geometry =
+            object.geometry.clone();
 
 
-          object.frustumCulled =
-            true;
+          geometry.applyMatrix4(
+            object.matrixWorld
+          );
 
 
-          // ===========================================
-          // MATERIALS
-          // ===========================================
+          // ---------------------------------------------
+          // MATERIAL
+          // ---------------------------------------------
+
+          let material;
+
 
           if (
             Array.isArray(
@@ -372,28 +315,45 @@ function FarmTree({
             )
           ) {
 
-            object.material =
+            material =
               object.material.map(
-                (material) =>
+                (sourceMaterial) =>
                   prepareTreeMaterial(
                     object,
-                    material
+                    sourceMaterial
                   )
               );
 
           } else {
 
-            object.material =
+            material =
               prepareTreeMaterial(
                 object,
                 object.material
               );
           }
+
+
+          // ---------------------------------------------
+          // PERFORMANCE
+          // ---------------------------------------------
+
+          geometry.computeBoundingBox();
+          geometry.computeBoundingSphere();
+
+
+          parts.push({
+            geometry,
+            material,
+            name:
+              object.name ||
+              `tree-part-${parts.length}`,
+          });
         }
       );
 
 
-      return cloned;
+      return parts;
 
     }, [
       gltf.scene,
@@ -401,12 +361,97 @@ function FarmTree({
 
 
   // ===================================================
-  // TREE SCALE
+  // INSTANCE MATRICES
   // ===================================================
 
-  const finalScale =
-    0.32 *
-    scale;
+  useLayoutEffect(() => {
+
+    const dummy =
+      new THREE.Object3D();
+
+
+    trees.forEach(
+      (
+        tree,
+        index
+      ) => {
+
+        const position =
+          tree.position ||
+          [0, 0, 0];
+
+        const scale =
+          0.32 *
+          (
+            tree.scale ||
+            1
+          );
+
+        const rotation =
+          tree.rotation ||
+          0;
+
+
+        dummy.position.set(
+          position[0],
+          position[1],
+          position[2]
+        );
+
+
+        dummy.rotation.set(
+          0,
+          rotation,
+          0
+        );
+
+
+        dummy.scale.set(
+          scale,
+          scale,
+          scale
+        );
+
+
+        dummy.updateMatrix();
+
+
+        meshRefs.current.forEach(
+          (mesh) => {
+
+            if (!mesh) {
+              return;
+            }
+
+            mesh.setMatrixAt(
+              index,
+              dummy.matrix
+            );
+          }
+        );
+      }
+    );
+
+
+    meshRefs.current.forEach(
+      (mesh) => {
+
+        if (!mesh) {
+          return;
+        }
+
+
+        mesh.instanceMatrix.needsUpdate =
+          true;
+
+
+        mesh.computeBoundingSphere();
+      }
+    );
+
+  }, [
+    trees,
+  ]);
 
 
   // ===================================================
@@ -414,31 +459,51 @@ function FarmTree({
   // ===================================================
 
   return (
+    <group>
 
-    <primitive
+      {treeParts.map(
+        (
+          part,
+          index
+        ) => (
 
-      object={
-        tree
-      }
+          <instancedMesh
+            key={
+              `tree-part-${index}`
+            }
 
-      position={
-        position
-      }
+            ref={(mesh) => {
+              meshRefs.current[index] =
+                mesh;
+            }}
 
-      rotation={[
-        0,
-        rotation,
-        0,
-      ]}
+            args={[
+              part.geometry,
+              part.material,
+              trees.length,
+            ]}
 
-      scale={[
-        finalScale,
-        finalScale,
-        finalScale,
-      ]}
+            count={
+              trees.length
+            }
 
-    />
+            castShadow={
+              false
+            }
 
+            receiveShadow={
+              false
+            }
+
+            frustumCulled={
+              true
+            }
+          />
+
+        )
+      )}
+
+    </group>
   );
 }
 
@@ -460,10 +525,6 @@ function InstancedBushes({
   const rightRef =
     useRef();
 
-
-  // ===================================================
-  // SHARED GEOMETRY
-  // ===================================================
 
   const geometries =
     useMemo(
@@ -492,10 +553,6 @@ function InstancedBushes({
     );
 
 
-  // ===================================================
-  // SHARED MATERIALS
-  // ===================================================
-
   const materials =
     useMemo(
       () => ({
@@ -504,10 +561,8 @@ function InstancedBushes({
           new THREE.MeshStandardMaterial({
             color:
               "#376b35",
-
             roughness:
               1,
-
             metalness:
               0,
           }),
@@ -516,10 +571,8 @@ function InstancedBushes({
           new THREE.MeshStandardMaterial({
             color:
               "#477c3d",
-
             roughness:
               1,
-
             metalness:
               0,
           }),
@@ -528,10 +581,8 @@ function InstancedBushes({
           new THREE.MeshStandardMaterial({
             color:
               "#2f6534",
-
             roughness:
               1,
-
             metalness:
               0,
           }),
@@ -540,10 +591,6 @@ function InstancedBushes({
       []
     );
 
-
-  // ===================================================
-  // INSTANCE MATRICES
-  // ===================================================
 
   useEffect(() => {
 
@@ -565,9 +612,7 @@ function InstancedBushes({
           0.08;
 
 
-        // =============================================
         // CENTER
-        // =============================================
 
         dummy.position.set(
           position[0],
@@ -603,40 +648,26 @@ function InstancedBushes({
         );
 
 
-        // =============================================
         // LEFT
-        // =============================================
 
         dummy.position.set(
-
           position[0] -
             0.32 *
             bushScale,
-
           position[1] +
             0.3 *
             bushScale,
-
           position[2] +
             0.05 *
             bushScale
         );
 
 
-        dummy.rotation.set(
-          0,
-          0,
-          0
-        );
-
-
         dummy.scale.set(
           0.75 *
             bushScale,
-
           0.65 *
             bushScale,
-
           0.7 *
             bushScale
         );
@@ -651,40 +682,26 @@ function InstancedBushes({
         );
 
 
-        // =============================================
         // RIGHT
-        // =============================================
 
         dummy.position.set(
-
           position[0] +
             0.34 *
             bushScale,
-
           position[1] +
             0.28 *
             bushScale,
-
           position[2] -
             0.04 *
             bushScale
         );
 
 
-        dummy.rotation.set(
-          0,
-          0,
-          0
-        );
-
-
         dummy.scale.set(
           0.7 *
             bushScale,
-
           0.62 *
             bushScale,
-
           0.7 *
             bushScale
         );
@@ -704,10 +721,8 @@ function InstancedBushes({
     centerRef.current.instanceMatrix.needsUpdate =
       true;
 
-
     leftRef.current.instanceMatrix.needsUpdate =
       true;
-
 
     rightRef.current.instanceMatrix.needsUpdate =
       true;
@@ -717,15 +732,10 @@ function InstancedBushes({
   ]);
 
 
-  // ===================================================
-  // RENDER
-  // ===================================================
-
   return (
     <>
 
       <instancedMesh
-
         ref={
           centerRef
         }
@@ -736,19 +746,12 @@ function InstancedBushes({
           bushes.length,
         ]}
 
-        castShadow={
-          false
-        }
-
-        receiveShadow={
-          false
-        }
-
+        castShadow={false}
+        receiveShadow={false}
       />
 
 
       <instancedMesh
-
         ref={
           leftRef
         }
@@ -759,19 +762,12 @@ function InstancedBushes({
           bushes.length,
         ]}
 
-        castShadow={
-          false
-        }
-
-        receiveShadow={
-          false
-        }
-
+        castShadow={false}
+        receiveShadow={false}
       />
 
 
       <instancedMesh
-
         ref={
           rightRef
         }
@@ -782,14 +778,8 @@ function InstancedBushes({
           bushes.length,
         ]}
 
-        castShadow={
-          false
-        }
-
-        receiveShadow={
-          false
-        }
-
+        castShadow={false}
+        receiveShadow={false}
       />
 
     </>
@@ -814,10 +804,6 @@ function InstancedGrass({
   const bladeThreeRef =
     useRef();
 
-
-  // ===================================================
-  // SHARED GEOMETRY
-  // ===================================================
 
   const geometries =
     useMemo(
@@ -849,10 +835,6 @@ function InstancedGrass({
     );
 
 
-  // ===================================================
-  // SHARED MATERIALS
-  // ===================================================
-
   const materials =
     useMemo(
       () => ({
@@ -861,10 +843,8 @@ function InstancedGrass({
           new THREE.MeshStandardMaterial({
             color:
               "#5d873c",
-
             roughness:
               1,
-
             metalness:
               0,
           }),
@@ -873,10 +853,8 @@ function InstancedGrass({
           new THREE.MeshStandardMaterial({
             color:
               "#6a9444",
-
             roughness:
               1,
-
             metalness:
               0,
           }),
@@ -885,10 +863,8 @@ function InstancedGrass({
           new THREE.MeshStandardMaterial({
             color:
               "#4f7b37",
-
             roughness:
               1,
-
             metalness:
               0,
           }),
@@ -897,10 +873,6 @@ function InstancedGrass({
       []
     );
 
-
-  // ===================================================
-  // INSTANCE MATRICES
-  // ===================================================
 
   useEffect(() => {
 
@@ -925,25 +897,19 @@ function InstancedGrass({
         const scale =
           item.scale;
 
-
         const rotation =
           item.rotation;
 
 
-        // =============================================
-        // BLADE 1
-        // =============================================
+        // BLADE ONE
 
         dummy.position.set(
-
           x -
             0.08 *
             scale,
-
           y +
             0.18 *
             scale,
-
           z
         );
 
@@ -969,20 +935,15 @@ function InstancedGrass({
         );
 
 
-        // =============================================
-        // BLADE 2
-        // =============================================
+        // BLADE TWO
 
         dummy.position.set(
-
           x +
             0.08 *
             scale,
-
           y +
             0.2 *
             scale,
-
           z +
             0.03 *
             scale
@@ -996,11 +957,6 @@ function InstancedGrass({
         );
 
 
-        dummy.scale.setScalar(
-          scale
-        );
-
-
         dummy.updateMatrix();
 
 
@@ -1010,18 +966,13 @@ function InstancedGrass({
         );
 
 
-        // =============================================
-        // BLADE 3
-        // =============================================
+        // BLADE THREE
 
         dummy.position.set(
-
           x,
-
           y +
             0.23 *
             scale,
-
           z -
             0.07 *
             scale
@@ -1032,11 +983,6 @@ function InstancedGrass({
           0,
           rotation,
           0
-        );
-
-
-        dummy.scale.setScalar(
-          scale
         );
 
 
@@ -1054,10 +1000,8 @@ function InstancedGrass({
     bladeOneRef.current.instanceMatrix.needsUpdate =
       true;
 
-
     bladeTwoRef.current.instanceMatrix.needsUpdate =
       true;
-
 
     bladeThreeRef.current.instanceMatrix.needsUpdate =
       true;
@@ -1067,15 +1011,10 @@ function InstancedGrass({
   ]);
 
 
-  // ===================================================
-  // RENDER
-  // ===================================================
-
   return (
     <>
 
       <instancedMesh
-
         ref={
           bladeOneRef
         }
@@ -1086,19 +1025,12 @@ function InstancedGrass({
           grass.length,
         ]}
 
-        castShadow={
-          false
-        }
-
-        receiveShadow={
-          false
-        }
-
+        castShadow={false}
+        receiveShadow={false}
       />
 
 
       <instancedMesh
-
         ref={
           bladeTwoRef
         }
@@ -1109,19 +1041,12 @@ function InstancedGrass({
           grass.length,
         ]}
 
-        castShadow={
-          false
-        }
-
-        receiveShadow={
-          false
-        }
-
+        castShadow={false}
+        receiveShadow={false}
       />
 
 
       <instancedMesh
-
         ref={
           bladeThreeRef
         }
@@ -1132,14 +1057,8 @@ function InstancedGrass({
           grass.length,
         ]}
 
-        castShadow={
-          false
-        }
-
-        receiveShadow={
-          false
-        }
-
+        castShadow={false}
+        receiveShadow={false}
       />
 
     </>
@@ -1153,6 +1072,15 @@ function InstancedGrass({
 
 export default function FarmVegetation() {
 
+  // ===================================================
+  // LOAD TREE GLB ONCE
+  // ===================================================
+
+  const gltf =
+    useGLTF(
+      TREE_MODEL_PATH
+    );
+
 
   // ===================================================
   // TREE LOCATIONS
@@ -1165,10 +1093,8 @@ export default function FarmVegetation() {
         {
           position:
             [-17, 0, -13],
-
           scale:
             1.25,
-
           rotation:
             0.3,
         },
@@ -1176,10 +1102,8 @@ export default function FarmVegetation() {
         {
           position:
             [-13.5, 0, -16],
-
           scale:
             0.95,
-
           rotation:
             1.1,
         },
@@ -1187,10 +1111,8 @@ export default function FarmVegetation() {
         {
           position:
             [-8.5, 0, -17],
-
           scale:
             1.15,
-
           rotation:
             2.2,
         },
@@ -1198,10 +1120,8 @@ export default function FarmVegetation() {
         {
           position:
             [9, 0, -17],
-
           scale:
             1.1,
-
           rotation:
             0.8,
         },
@@ -1209,10 +1129,8 @@ export default function FarmVegetation() {
         {
           position:
             [14, 0, -15],
-
           scale:
             1.3,
-
           rotation:
             1.7,
         },
@@ -1220,10 +1138,8 @@ export default function FarmVegetation() {
         {
           position:
             [17, 0, -10],
-
           scale:
             0.95,
-
           rotation:
             2.6,
         },
@@ -1231,10 +1147,8 @@ export default function FarmVegetation() {
         {
           position:
             [-18, 0, 4],
-
           scale:
             1.1,
-
           rotation:
             0.5,
         },
@@ -1242,10 +1156,8 @@ export default function FarmVegetation() {
         {
           position:
             [18, 0, 3],
-
           scale:
             1.2,
-
           rotation:
             1.4,
         },
@@ -1253,10 +1165,8 @@ export default function FarmVegetation() {
         {
           position:
             [-16, 0, 13],
-
           scale:
             1.15,
-
           rotation:
             2.1,
         },
@@ -1264,10 +1174,8 @@ export default function FarmVegetation() {
         {
           position:
             [15, 0, 14],
-
           scale:
             1,
-
           rotation:
             0.9,
         },
@@ -1354,15 +1262,13 @@ export default function FarmVegetation() {
             radius;
 
 
-          // ===========================================
-          // KEEP GRASS OUTSIDE CULTIVATED CENTRE
-          // ===========================================
+          // Keep grass outside
+          // cultivated center.
 
           if (
             Math.abs(x) < 12 &&
             Math.abs(z) < 10
           ) {
-
             continue;
           }
 
@@ -1414,39 +1320,19 @@ export default function FarmVegetation() {
   return (
     <group>
 
-
       {/* ===============================================
-          REAL TREES
+          GPU-INSTANCED REAL TREES
       =============================================== */}
 
-      {trees.map(
-        (
-          tree,
-          index
-        ) => (
+      <InstancedTrees
+        trees={
+          trees
+        }
 
-          <FarmTree
-
-            key={
-              `tree-${index}`
-            }
-
-            position={
-              tree.position
-            }
-
-            scale={
-              tree.scale
-            }
-
-            rotation={
-              tree.rotation
-            }
-
-          />
-
-        )
-      )}
+        gltf={
+          gltf
+        }
+      />
 
 
       {/* ===============================================
@@ -1469,7 +1355,6 @@ export default function FarmVegetation() {
           grass
         }
       />
-
 
     </group>
   );
