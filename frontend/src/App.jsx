@@ -1,18 +1,13 @@
 import "./App.css";
 
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Link,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 import Weather from "./pages/Weather";
 import CropRecommendation from "./pages/CropRecommendation";
 import DiseaseDetection from "./pages/DiseaseDetection";
 import SoilFertility from "./pages/SoilFertility";
 import Farm3D from "./pages/Farm3D";
-
+import FarmerDashboard from "./pages/FarmerDashboard";
 // =====================================================
 // KRISHIMITRA AI
 // HOME PAGE
@@ -21,7 +16,6 @@ import Farm3D from "./pages/Farm3D";
 function Home() {
   return (
     <div className="app">
-
       {/* ================= NAVBAR ================= */}
 
       <header className="navbar">
@@ -39,97 +33,68 @@ function Home() {
             Home
           </a>
 
-          <a href="#features">
-            Features
-          </a>
+          <a href="#features">Features</a>
 
-          <Link to="/weather">
-            Weather
-          </Link>
+          <Link to="/weather">Weather</Link>
 
-          <Link to="/crop">
-            Crop AI
-          </Link>
+          <Link to="/crop">Crop AI</Link>
 
-          <Link to="/disease">
-            Disease AI
-          </Link>
+          <Link to="/disease">Disease AI</Link>
 
-          <Link to="/soil">
-            Soil Test
-          </Link>
+          <Link to="/soil">Soil Test</Link>
 
-          <Link to="/farm">
-            3D Farm
-          </Link>
+          <Link to="/farm">3D Farm</Link>
 
-          <a href="#about">
-            About Us
-          </a>
+          <a href="#about">About Us</a>
         </nav>
 
-        <button className="dashboard-btn">
+        <Link
+          to="/dashboard"
+          className="dashboard-btn"
+          style={{
+            textDecoration: "none",
+          }}
+        >
           <span>👤</span>
           Farmer Dashboard
           <span>→</span>
-        </button>
+        </Link>
       </header>
-
 
       {/* ================= HERO ================= */}
 
       <main id="home" className="hero">
-
         <div className="hero-overlay"></div>
 
         <div className="ai-glow ai-glow-one"></div>
         <div className="ai-glow ai-glow-two"></div>
 
-
         {/* ================= LEFT CONTENT ================= */}
 
         <section className="hero-content">
-
           <div className="ai-label">
             <span className="leaf">🌱</span>
-
             <span className="pulse"></span>
-
             AI POWERED AGRICULTURE
           </div>
 
-
           <h1>
-            <span className="white-heading">
-              KrishiMitra
-            </span>
-
-            <span className="green-heading">
-              AI
-            </span>
-
+            <span className="white-heading">KrishiMitra</span>
+            <span className="green-heading">AI</span>
             <br />
-
             Smart Farming.
             <br />
-
-            <span className="gradient-heading">
-              Better Tomorrow.
-            </span>
+            <span className="gradient-heading">Better Tomorrow.</span>
           </h1>
 
-
           <p className="hero-description">
-            Your intelligent farming companion that helps you make
-            better decisions with real-time weather insights,
-            AI-powered crop recommendations, soil fertility analysis,
-            intelligent crop disease detection and interactive
-            3D farm intelligence.
+            Your intelligent farming companion that helps you make better
+            decisions with real-time weather insights, AI-powered crop
+            recommendations, soil fertility analysis, intelligent crop disease
+            detection and interactive 3D farm intelligence.
           </p>
 
-
           <div className="hero-buttons">
-
             <a href="#features" className="primary-btn">
               Get Started
               <span>→</span>
@@ -139,18 +104,13 @@ function Home() {
               Explore Features
               <span className="play">▶</span>
             </a>
-
           </div>
-
 
           {/* ================= STATS ================= */}
 
           <div className="stats-panel">
-
             <div className="stat-box">
-              <div className="stat-icon">
-                👥
-              </div>
+              <div className="stat-icon">👥</div>
 
               <div>
                 <strong>10K+</strong>
@@ -158,14 +118,10 @@ function Home() {
               </div>
             </div>
 
-
             <div className="stat-divider"></div>
 
-
             <div className="stat-box">
-              <div className="stat-icon">
-                🎯
-              </div>
+              <div className="stat-icon">🎯</div>
 
               <div>
                 <strong>AI</strong>
@@ -173,56 +129,37 @@ function Home() {
               </div>
             </div>
 
-
             <div className="stat-divider"></div>
 
-
             <div className="stat-box">
-              <div className="stat-icon">
-                🎧
-              </div>
+              <div className="stat-icon">🎧</div>
 
               <div>
                 <strong>24/7</strong>
                 <span>AI Assistance</span>
               </div>
             </div>
-
           </div>
-
         </section>
-
 
         {/* ================= RIGHT DASHBOARD ================= */}
 
         <aside className="right-dashboard">
-
           <div className="welcome-card">
-            <strong>
-              Good Morning, Farmer! 👋
-            </strong>
+            <strong>Good Morning, Farmer! 👋</strong>
 
-            <span>
-              Your smart farm assistant is ready
-            </span>
+            <span>Your smart farm assistant is ready</span>
           </div>
-
 
           {/* WEATHER */}
 
-          <div
-            id="weather"
-            className="dashboard-card weather-card"
-          >
-
+          <div id="weather" className="dashboard-card weather-card">
             <div className="card-title">
               <span>📍</span>
               Lucknow, Uttar Pradesh
             </div>
 
-
             <div className="weather-main">
-
               <div>
                 <strong className="temperature">
                   28<span>°C</span>
@@ -231,15 +168,10 @@ function Home() {
                 <p>Partly Cloudy</p>
               </div>
 
-              <div className="weather-symbol">
-                🌤️
-              </div>
-
+              <div className="weather-symbol">🌤️</div>
             </div>
 
-
             <div className="weather-info">
-
               <div>
                 <strong>💧 72%</strong>
                 <span>Humidity</span>
@@ -254,337 +186,205 @@ function Home() {
                 <strong>🌧️ 0 mm</strong>
                 <span>Rainfall</span>
               </div>
-
             </div>
-
           </div>
-
 
           {/* CROP RECOMMENDATION */}
 
-          <div
-            id="crop"
-            className="dashboard-card crop-card"
-          >
-
+          <div id="crop" className="dashboard-card crop-card">
             <div className="card-heading">
-              <div className="small-icon">
-                🌱
-              </div>
-
+              <div className="small-icon">🌱</div>
               AI Crop Recommendation
             </div>
 
-
             <div className="crop-content">
-
-              <div className="wheat-icon">
-                🌾
-              </div>
+              <div className="wheat-icon">🌾</div>
 
               <div className="crop-details">
-
                 <span>BEST MATCH</span>
 
-                <div className="percentage">
-                  94%
-                </div>
+                <div className="percentage">94%</div>
 
                 <h3>Wheat</h3>
 
-                <p>
-                  Recommended for your soil
-                </p>
-
+                <p>Recommended for your soil</p>
               </div>
-
             </div>
 
-
-            <Link
-              to="/crop"
-              className="details-btn"
-            >
+            <Link to="/crop" className="details-btn">
               View Details
               <span>→</span>
             </Link>
-
           </div>
-
         </aside>
-
       </main>
-
 
       {/* ================= FEATURES ================= */}
 
-      <section
-        id="features"
-        className="features-section"
-      >
-
+      <section id="features" className="features-section">
         <div className="features-grid">
-
           {/* WEATHER FEATURE */}
 
           <article className="feature-card weather-feature">
-
-            <div className="feature-visual">
-              🌦️
-            </div>
+            <div className="feature-visual">🌦️</div>
 
             <div className="feature-content">
+              <span className="feature-number">01</span>
 
-              <span className="feature-number">
-                01
-              </span>
-
-              <h2>
-                Smart Weather
-              </h2>
+              <h2>Smart Weather</h2>
 
               <p>
-                Real-time weather updates, 7-day forecasts
-                and intelligent weather alerts designed
-                specifically for your farm.
+                Real-time weather updates, 7-day forecasts and intelligent
+                weather alerts designed specifically for your farm.
               </p>
 
               <Link to="/weather" className="feature-link">
                 Check Weather
                 <span>→</span>
               </Link>
-
             </div>
-
           </article>
-
 
           {/* CROP FEATURE */}
 
           <article className="feature-card crop-feature">
-
-            <div className="feature-visual">
-              🌱
-            </div>
+            <div className="feature-visual">🌱</div>
 
             <div className="feature-content">
+              <span className="feature-number">02</span>
 
-              <span className="feature-number">
-                02
-              </span>
-
-              <h2>
-                Crop Recommendation
-              </h2>
+              <h2>Crop Recommendation</h2>
 
               <p>
-                Get intelligent crop suggestions based on
-                soil nutrients, pH, moisture, weather and
-                environmental conditions.
+                Get intelligent crop suggestions based on soil nutrients, pH,
+                moisture, weather and environmental conditions.
               </p>
 
-              <Link
-                to="/crop"
-                className="feature-link crop-link"
-              >
+              <Link to="/crop" className="feature-link crop-link">
                 Find Best Crop
                 <span>→</span>
               </Link>
-
             </div>
-
           </article>
-
 
           {/* DISEASE FEATURE */}
 
-          <article
-            id="disease"
-            className="feature-card disease-feature"
-          >
-
+          <article id="disease" className="feature-card disease-feature">
             <div className="feature-visual scan-visual">
               🍃
               <div className="scan-line"></div>
             </div>
 
             <div className="feature-content">
+              <span className="feature-number">03</span>
 
-              <span className="feature-number">
-                03
-              </span>
-
-              <h2>
-                Disease Detection
-              </h2>
+              <h2>Disease Detection</h2>
 
               <p>
-                Upload a crop leaf image and let our AI
-                identify diseases and provide actionable
-                prevention and treatment guidance.
+                Upload a crop leaf image and let our AI identify diseases and
+                provide actionable prevention and treatment guidance.
               </p>
 
-              <Link
-                to="/disease"
-                className="feature-link crop-link"
-              >
+              <Link to="/disease" className="feature-link crop-link">
                 Detect Disease
                 <span>→</span>
               </Link>
-
             </div>
-
           </article>
-
 
           {/* SOIL FERTILITY FEATURE */}
 
           <article className="feature-card soil-feature">
-
-            <div className="feature-visual">
-              🧪
-            </div>
+            <div className="feature-visual">🧪</div>
 
             <div className="feature-content">
+              <span className="feature-number">04</span>
 
-              <span className="feature-number">
-                04
-              </span>
-
-              <h2>
-                Soil Fertility Test
-              </h2>
+              <h2>Soil Fertility Test</h2>
 
               <p>
-                Analyze nitrogen, phosphorus, potassium,
-                soil pH and moisture to understand your
-                soil health and receive smart recommendations.
+                Analyze nitrogen, phosphorus, potassium, soil pH and moisture to
+                understand your soil health and receive smart recommendations.
               </p>
 
-              <Link
-                to="/soil"
-                className="feature-link crop-link"
-              >
+              <Link to="/soil" className="feature-link crop-link">
                 Analyze Soil
                 <span>→</span>
               </Link>
-
             </div>
-
           </article>
-
 
           {/* ================= 3D FARM FEATURE ================= */}
 
           <article className="feature-card farm3d-feature">
-
-            <div className="feature-visual">
-              🌾
-            </div>
+            <div className="feature-visual">🌾</div>
 
             <div className="feature-content">
+              <span className="feature-number">05</span>
 
-              <span className="feature-number">
-                05
-              </span>
-
-              <h2>
-                3D Smart Farm
-              </h2>
+              <h2>3D Smart Farm</h2>
 
               <p>
-                Explore an interactive digital farm that
-                brings crop health, soil conditions,
-                weather and farm intelligence into one
-                visual environment.
+                Explore an interactive digital farm that brings crop health,
+                soil conditions, weather and farm intelligence into one visual
+                environment.
               </p>
 
-              <Link
-                to="/farm"
-                className="feature-link crop-link"
-              >
+              <Link to="/farm" className="feature-link crop-link">
                 Enter 3D Farm
                 <span>→</span>
               </Link>
-
             </div>
-
           </article>
-
         </div>
-
 
         {/* ================= BENEFITS ================= */}
 
         <div className="benefits">
-
           <div className="benefit">
             <span>✥</span>
 
             <div>
-              <strong>
-                Increase Productivity
-              </strong>
+              <strong>Increase Productivity</strong>
 
-              <p>
-                with AI Insights
-              </p>
+              <p>with AI Insights</p>
             </div>
           </div>
-
 
           <div className="benefit">
             <span>🛡</span>
 
             <div>
-              <strong>
-                Reduce Crop Loss
-              </strong>
+              <strong>Reduce Crop Loss</strong>
 
-              <p>
-                with Early Detection
-              </p>
+              <p>with Early Detection</p>
             </div>
           </div>
-
 
           <div className="benefit">
             <span>◉</span>
 
             <div>
-              <strong>
-                Save Time & Money
-              </strong>
+              <strong>Save Time & Money</strong>
 
-              <p>
-                with Smart Decisions
-              </p>
+              <p>with Smart Decisions</p>
             </div>
           </div>
-
 
           <div className="benefit">
             <span>♧</span>
 
             <div>
-              <strong>
-                Sustainable Farming
-              </strong>
+              <strong>Sustainable Farming</strong>
 
-              <p>
-                for Better Future
-              </p>
+              <p>for Better Future</p>
             </div>
           </div>
-
         </div>
-
       </section>
-
     </div>
   );
 }
-
 
 // =====================================================
 // ROUTES
@@ -593,41 +393,20 @@ function Home() {
 function App() {
   return (
     <BrowserRouter>
-
       <Routes>
+        <Route path="/" element={<Home />} />
 
-        <Route
-          path="/"
-          element={<Home />}
-        />
+        <Route path="/weather" element={<Weather />} />
 
-        <Route
-          path="/weather"
-          element={<Weather />}
-        />
+        <Route path="/crop" element={<CropRecommendation />} />
 
-        <Route
-          path="/crop"
-          element={<CropRecommendation />}
-        />
+        <Route path="/disease" element={<DiseaseDetection />} />
 
-        <Route
-          path="/disease"
-          element={<DiseaseDetection />}
-        />
+        <Route path="/soil" element={<SoilFertility />} />
 
-        <Route
-          path="/soil"
-          element={<SoilFertility />}
-        />
-
-        <Route
-          path="/farm"
-          element={<Farm3D />}
-        />
-
+        <Route path="/farm" element={<Farm3D />} />
+        <Route path="/dashboard" element={<FarmerDashboard />} />
       </Routes>
-
     </BrowserRouter>
   );
 }

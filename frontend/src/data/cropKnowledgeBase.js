@@ -8,10 +8,12 @@
 // Exact requirements can vary by variety, location,
 // soil condition, irrigation and crop growth stage.
 //
+// NPK values are suitability heuristics, not fertilizer
+// prescriptions. They are used to help rank crops based
+// on available soil nutrient conditions.
 // =====================================================
 
 export const cropKnowledgeBase = [
-
   // ===================================================
   // 1. WHEAT
   // ===================================================
@@ -55,6 +57,27 @@ export const cropKnowledgeBase = [
       idealMin: 450,
       idealMax: 650,
       max: 900,
+    },
+
+    nutrients: {
+      nitrogen: {
+        min: 40,
+        idealMin: 80,
+        idealMax: 140,
+        max: 180,
+      },
+      phosphorus: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 60,
+        max: 90,
+      },
+      potassium: {
+        min: 20,
+        idealMin: 40,
+        idealMax: 80,
+        max: 120,
+      },
     },
 
     suitableSoils: [
@@ -108,6 +131,27 @@ export const cropKnowledgeBase = [
       idealMin: 1000,
       idealMax: 1800,
       max: 2500,
+    },
+
+    nutrients: {
+      nitrogen: {
+        min: 50,
+        idealMin: 100,
+        idealMax: 160,
+        max: 220,
+      },
+      phosphorus: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 60,
+        max: 90,
+      },
+      potassium: {
+        min: 30,
+        idealMin: 60,
+        idealMax: 100,
+        max: 150,
+      },
     },
 
     suitableSoils: [
@@ -166,6 +210,27 @@ export const cropKnowledgeBase = [
       max: 1200,
     },
 
+    nutrients: {
+      nitrogen: {
+        min: 50,
+        idealMin: 100,
+        idealMax: 160,
+        max: 220,
+      },
+      phosphorus: {
+        min: 25,
+        idealMin: 40,
+        idealMax: 70,
+        max: 100,
+      },
+      potassium: {
+        min: 30,
+        idealMin: 60,
+        idealMax: 100,
+        max: 150,
+      },
+    },
+
     suitableSoils: [
       "loamy",
       "sandy",
@@ -219,6 +284,27 @@ export const cropKnowledgeBase = [
       max: 750,
     },
 
+    nutrients: {
+      nitrogen: {
+        min: 30,
+        idealMin: 60,
+        idealMax: 100,
+        max: 140,
+      },
+      phosphorus: {
+        min: 15,
+        idealMin: 30,
+        idealMax: 50,
+        max: 75,
+      },
+      potassium: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 65,
+        max: 100,
+      },
+    },
+
     suitableSoils: [
       "loamy",
       "sandy",
@@ -270,6 +356,27 @@ export const cropKnowledgeBase = [
       idealMin: 300,
       idealMax: 500,
       max: 700,
+    },
+
+    nutrients: {
+      nitrogen: {
+        min: 20,
+        idealMin: 40,
+        idealMax: 70,
+        max: 100,
+      },
+      phosphorus: {
+        min: 15,
+        idealMin: 30,
+        idealMax: 50,
+        max: 75,
+      },
+      potassium: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 60,
+        max: 90,
+      },
     },
 
     suitableSoils: [
@@ -328,6 +435,27 @@ export const cropKnowledgeBase = [
       max: 2000,
     },
 
+    nutrients: {
+      nitrogen: {
+        min: 80,
+        idealMin: 140,
+        idealMax: 220,
+        max: 300,
+      },
+      phosphorus: {
+        min: 30,
+        idealMin: 50,
+        idealMax: 80,
+        max: 120,
+      },
+      potassium: {
+        min: 60,
+        idealMin: 100,
+        idealMax: 180,
+        max: 250,
+      },
+    },
+
     suitableSoils: [
       "loamy",
       "clayey",
@@ -379,6 +507,27 @@ export const cropKnowledgeBase = [
       idealMin: 600,
       idealMax: 1000,
       max: 1200,
+    },
+
+    nutrients: {
+      nitrogen: {
+        min: 40,
+        idealMin: 80,
+        idealMax: 140,
+        max: 190,
+      },
+      phosphorus: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 60,
+        max: 90,
+      },
+      potassium: {
+        min: 30,
+        idealMin: 60,
+        idealMax: 100,
+        max: 150,
+      },
     },
 
     suitableSoils: [
@@ -435,6 +584,27 @@ export const cropKnowledgeBase = [
       max: 1300,
     },
 
+    nutrients: {
+      nitrogen: {
+        min: 25,
+        idealMin: 45,
+        idealMax: 75,
+        max: 110,
+      },
+      phosphorus: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 60,
+        max: 90,
+      },
+      potassium: {
+        min: 30,
+        idealMin: 50,
+        idealMax: 90,
+        max: 130,
+      },
+    },
+
     suitableSoils: [
       "loamy",
       "clayey",
@@ -487,6 +657,27 @@ export const cropKnowledgeBase = [
       idealMin: 300,
       idealMax: 600,
       max: 800,
+    },
+
+    nutrients: {
+      nitrogen: {
+        min: 25,
+        idealMin: 50,
+        idealMax: 90,
+        max: 130,
+      },
+      phosphorus: {
+        min: 15,
+        idealMin: 25,
+        idealMax: 45,
+        max: 70,
+      },
+      potassium: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 65,
+        max: 100,
+      },
     },
 
     suitableSoils: [
@@ -545,6 +736,27 @@ export const cropKnowledgeBase = [
       max: 1000,
     },
 
+    nutrients: {
+      nitrogen: {
+        min: 25,
+        idealMin: 50,
+        idealMax: 90,
+        max: 130,
+      },
+      phosphorus: {
+        min: 15,
+        idealMin: 25,
+        idealMax: 45,
+        max: 70,
+      },
+      potassium: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 65,
+        max: 100,
+      },
+    },
+
     suitableSoils: [
       "loamy",
       "clayey",
@@ -597,6 +809,27 @@ export const cropKnowledgeBase = [
       idealMin: 500,
       idealMax: 900,
       max: 1200,
+    },
+
+    nutrients: {
+      nitrogen: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 60,
+        max: 90,
+      },
+      phosphorus: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 55,
+        max: 80,
+      },
+      potassium: {
+        min: 25,
+        idealMin: 45,
+        idealMax: 75,
+        max: 110,
+      },
     },
 
     suitableSoils: [
@@ -652,6 +885,27 @@ export const cropKnowledgeBase = [
       max: 1000,
     },
 
+    nutrients: {
+      nitrogen: {
+        min: 40,
+        idealMin: 80,
+        idealMax: 130,
+        max: 180,
+      },
+      phosphorus: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 60,
+        max: 90,
+      },
+      potassium: {
+        min: 40,
+        idealMin: 80,
+        idealMax: 140,
+        max: 200,
+      },
+    },
+
     suitableSoils: [
       "loamy",
       "sandy",
@@ -705,6 +959,27 @@ export const cropKnowledgeBase = [
       max: 700,
     },
 
+    nutrients: {
+      nitrogen: {
+        min: 30,
+        idealMin: 60,
+        idealMax: 100,
+        max: 140,
+      },
+      phosphorus: {
+        min: 15,
+        idealMin: 25,
+        idealMax: 45,
+        max: 70,
+      },
+      potassium: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 65,
+        max: 100,
+      },
+    },
+
     suitableSoils: [
       "loamy",
       "sandy",
@@ -756,6 +1031,27 @@ export const cropKnowledgeBase = [
       idealMin: 600,
       idealMax: 1000,
       max: 1300,
+    },
+
+    nutrients: {
+      nitrogen: {
+        min: 20,
+        idealMin: 40,
+        idealMax: 70,
+        max: 100,
+      },
+      phosphorus: {
+        min: 15,
+        idealMin: 30,
+        idealMax: 50,
+        max: 75,
+      },
+      potassium: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 65,
+        max: 100,
+      },
     },
 
     suitableSoils: [
@@ -812,6 +1108,27 @@ export const cropKnowledgeBase = [
       idealMin: 400,
       idealMax: 700,
       max: 900,
+    },
+
+    nutrients: {
+      nitrogen: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 65,
+        max: 90,
+      },
+      phosphorus: {
+        min: 15,
+        idealMin: 25,
+        idealMax: 45,
+        max: 70,
+      },
+      potassium: {
+        min: 20,
+        idealMin: 35,
+        idealMax: 60,
+        max: 90,
+      },
     },
 
     suitableSoils: [

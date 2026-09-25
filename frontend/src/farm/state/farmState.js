@@ -30,13 +30,13 @@ export const initialFarmState = {
 
   weather: {
 
-    isRaining: false,
+    isRaining: true,
 
     cloudCoverage: 0.4,
 
     temperature: 28,
 
-    humidity: 62,
+    humidity: 80,
 
     windSpeed: 6,
   },
@@ -77,7 +77,7 @@ export const initialFarmState = {
 
       health: "healthy",
 
-      moisture: 56,
+      moisture: 80,
       growth: 0,
       diseaseRisk: "Low",
     },

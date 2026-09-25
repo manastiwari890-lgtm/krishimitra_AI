@@ -10,7 +10,17 @@ export class SimulationEngine {
 
     this.interval = null;
 
-    this.tickDuration = 1000; // 1 second
+    // Run one simulation tick every real second.
+    this.tickDuration = 1000;
+
+    // Simulated farm time advanced per real second.
+    //
+    // 0.03 hours = 1.8 simulated minutes.
+    //
+    // This keeps soil moisture, crop growth and
+    // other Digital Twin processes moving gradually
+    // instead of reaching their limits too quickly.
+    this.simulationDeltaHours = 0.03;
   }
 
   // ===================================================
@@ -48,7 +58,7 @@ export class SimulationEngine {
   tick() {
     this.digitalTwin.update(
       this.controller.farm.farmState,
-      0.1,
+      this.simulationDeltaHours,
     );
   }
 }
