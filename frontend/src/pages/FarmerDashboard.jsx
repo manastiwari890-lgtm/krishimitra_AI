@@ -1636,8 +1636,18 @@ export default function FarmerDashboard() {
         {/* =================================================
             WEATHER + AI INSIGHT
         ================================================= */}
+        <style>
+          {`
+    @media (max-width: 800px) {
+      .krishi-weather-insight-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+    }
+  `}
+        </style>
 
         <section
+          className="krishi-weather-insight-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.2fr)",
