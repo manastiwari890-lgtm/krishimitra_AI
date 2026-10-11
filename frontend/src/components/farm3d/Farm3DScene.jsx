@@ -336,8 +336,7 @@ export default function Farm3DScene() {
         width:
           "100%",
 
-        height:
-          "650px",
+          height: isMobile ? "560px" : "650px",
 
         position:
           "relative",
@@ -392,22 +391,14 @@ export default function Farm3DScene() {
         // CAMERA
         // =================================================
 
+        
         camera={{
-          position: [
-            13,
-            10,
-            15,
-          ],
-
-          fov:
-            42,
-
-          near:
-            0.1,
-
-          far:
-            150,
+          position: isMobile ? [11, 9, 13] : [13, 10, 15],
+          fov: isMobile ? 38 : 42,
+          near: 0.1,
+          far: 150,
         }}
+        
 
         // =================================================
         // DEVICE PIXEL RATIO
@@ -515,6 +506,7 @@ export default function Farm3DScene() {
       ================================================= */}
 
       <div
+       className="krishi-3d-controls"
         style={{
 
           position:
@@ -638,9 +630,7 @@ export default function Farm3DScene() {
 
             backdropFilter:
               "blur(10px)",
-
-            fontSize:
-              "11px",
+              fontSize: isMobile ? "9px" : "11px",
 
             fontWeight:
               "600",
@@ -670,11 +660,8 @@ export default function Farm3DScene() {
           position:
             "absolute",
 
-          left:
-            "18px",
-
-          bottom:
-            "18px",
+            left: isMobile ? "8px" : "18px",
+            bottom: isMobile ? "8px" : "18px",
 
           padding:
             "10px 14px",
@@ -691,8 +678,7 @@ export default function Farm3DScene() {
           color:
             "#ffffff",
 
-          fontSize:
-            "13px",
+            fontSize: isMobile ? "10px" : "13px",
 
           fontWeight:
             "600",
@@ -709,6 +695,34 @@ export default function Farm3DScene() {
         🌾 Drag to explore • Scroll to zoom
 
       </div>
+      
+      <style>
+        {`
+          @media (max-width: 600px) {
+            .krishi-3d-controls {
+              top: 10px !important;
+              right: 10px !important;
+              gap: 6px !important;
+              max-width: calc(100% - 20px);
+            }
+
+            .krishi-3d-controls button {
+              padding: 8px 10px !important;
+              border-radius: 10px !important;
+              font-size: 10px !important;
+              box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16) !important;
+            }
+
+            .krishi-3d-controls > div {
+              padding: 5px 8px !important;
+              border-radius: 8px !important;
+              font-size: 9px !important;
+            }
+          }
+        `}
+      </style>
+      
+
 
     </div>
   );
